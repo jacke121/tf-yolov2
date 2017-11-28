@@ -1,0 +1,4 @@
+*.so
+*.txt
+__pycache__/
+ckpt/
