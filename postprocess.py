@@ -72,7 +72,8 @@ def draw_targets(image, bbox_pred, cls_inds, scores):
         if box_cls == 0:  # skip for others/background boxes
             continue
 
-        box_color = cfg.label_colors[box_cls]
+        box_label = cfg.label_names[box_cls]
+        box_color = cfg.label_colors[box_label]
 
         cv2.rectangle(image,
                       (bbox_pred[b, 1], bbox_pred[b, 0]),
@@ -80,9 +81,9 @@ def draw_targets(image, bbox_pred, cls_inds, scores):
                       box_color, 2)
 
         cv2.putText(image,
-            '{}_{:.3f}'.format(cfg.label_names[box_cls], scores[b]),
-            (bbox_pred[b, 1], bbox_pred[b, 0] - 5),  # text above 5 pixels
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.75, box_color)
+                    '{}_{:.3f}'.format(box_label, scores[b]),
+                    (bbox_pred[b, 1], bbox_pred[b, 0] - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6, box_color)
 
     return image

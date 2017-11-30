@@ -1,7 +1,6 @@
 # tf-yolo2 configurations
 from __future__ import absolute_import, division, print_function
 import os
-import argparse
 import numpy as np
 
 # yolo model name
@@ -28,8 +27,10 @@ num_anchors = 5
 # object labels and class colors
 label_names = ['others', 'car', 'bus', 'van']
 num_classes = len(label_names)
-label_colors = [(np.random.randint(0, 256), np.random.randint(
-    0, 256), np.random.randint(0, 256))] * num_classes
+label_colors = {}
+for label in label_names:
+    label_colors[label] = (np.random.randint(
+        0, 128), np.random.randint(0, 128), np.random.randint(0, 128))
 
 # yolo configuration
 iou_thresh = 0.7

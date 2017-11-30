@@ -9,29 +9,31 @@ slim = tf.contrib.slim
 
 # jit/xla config
 tfcfg = tf.ConfigProto()
-# tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.9
+tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.8
 tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
-net = Network(session=tf.Session(config=tfcfg))  # also load checkpoint or init variables
+# also load checkpoint or init variables
+net = Network(session=tf.Session(config=tfcfg))
 
 # load anchors and data
+print('loading anchors and dataset')
 anchors = get_anchors(target_size=(cfg.inp_size, cfg.inp_size))
 
-blob_images, blob_boxes, blob_classes = prep_train_images_blob()  # scaled data to inp_size
+# scaled, normalized data
+blob_images, blob_boxes, blob_classes = prep_train_images_blob()
 num_images = len(blob_images)
 
 print('loaded {} images from dataset'.format(num_images))
 
-# training
 for epoch in range(cfg.num_epochs):
-	print('epoch: {}'.format(epoch + 1))
+    print('epoch: {}'.format(epoch))
 
-    for i in range(num_images):  # only 1 image per batch
-        global_step, total_loss = net.train(
+    for i in range(num_images):
+        step, loss = net.train(
             image=blob_images[i], boxes=blob_boxes[i], classes=blob_classes[i], anchors=anchors)
 
-        if global_step % 2000 == 0:  # print status each 2000 steps
-        	print('step: {}, total loss: {:.3f}'.format(global_step, total_loss))
+        if step % 200 == 0:
+            print('step {} - total loss {}'.format(step, loss))
 
-    net.save()
+    # net.save()
     print('saved checkpoint')

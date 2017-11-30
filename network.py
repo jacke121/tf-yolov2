@@ -8,37 +8,53 @@ from utils.cython_bbox import yolo2bbox, bbox_overlaps, anchor_overlaps
 slim = tf.contrib.slim
 
 
+def leaky(features, name=None):
+    return tf.nn.leaky_relu(features, alpha=0.1, name=name)
+
+
 # import network defined in nets
 def forward(inputs, num_outputs, scope=None):  # define network architecture in here
     # network forwarding
     with tf.variable_scope(scope, 'net', [inputs], reuse=tf.AUTO_REUSE):
         with slim.arg_scope([slim.conv2d],
-                            activation_fn=tf.nn.relu,
+                            activation_fn=leaky,
                             normalizer_fn=slim.batch_norm,
-                            weights_initializer=tf.truncated_normal_initializer(stddev=0.01),
+                            weights_initializer=tf.truncated_normal_initializer(
+                                stddev=0.01),
                             weights_regularizer=slim.l2_regularizer(5e-4),
                             biases_initializer=tf.zeros_initializer()):
-            # use conv_s2 instead of max_pool2d, 11 convolution layers
-            net = slim.repeat(inputs, 2, slim.conv2d, 32, [3, 3], 2, scope='conv1_0')  # 104x104x32
-            net = slim.conv2d(net, 32, [3, 3], stride=1, scope='conv1_1')  # 104x104x32
+            # use conv_s2 instead of max_pool2d, 12 convolution layers + 1 pooling layer
+            net = slim.conv2d(
+                inputs, 64, [5, 5], stride=2, scope='conv0')  # 208x208x64
+            net = slim.max_pool2d(net, [2, 2], scope='pool0')
 
-            net = slim.conv2d(net, 64, [3, 3], stride=2, scope='conv2_0')  # 52x52x64
-            net = slim.conv2d(net, 64, [3, 3], stride=1, scope='conv2_1')  # 52x52x64
+            net = slim.conv2d(
+                net, 64, [3, 3], stride=1, scope='conv1_0')  # 104x104x64
+            net = slim.conv2d(
+                net, 64, [3, 3], stride=1, scope='conv1_1')  # 104x104x64
 
-            net = slim.conv2d(net, 128, [3, 3], stride=2, scope='conv3_0')  # 26x26x128
-            net = slim.conv2d(net, 128, [3, 3], stride=1, scope='conv3_1')  # 26x26x128
+            net = slim.conv2d(
+                net, 128, [3, 3], stride=2, scope='conv2_0')  # 52x52x128
+            net = slim.conv2d(
+                net, 128, [3, 3], stride=1, scope='conv2_1')  # 52x52x128
 
-            shortcut = slim.conv2d(net, 256, [1, 1], stride=2, scope='shortcut')  # 13x13x256
+            shortcut = slim.conv2d(
+                net, 256, [1, 1], stride=2, scope='shortcut2_3')
+            net = slim.conv2d(
+                net, 256, [3, 3], stride=2, scope='conv3_0')  # 26x26x256
+            net = slim.conv2d(
+                net + shortcut, 256, [3, 3], stride=1, scope='conv3_1')  # 26x26x256
 
-            net = slim.conv2d(net, 256, [3, 3], stride=2, scope='conv4_0')  # 13x13x256
-
-            net = net + shortcut  # 13x13x256
-
-            net = slim.conv2d(net, 256, [3, 3], stride=1, scope='conv4_1')  # 13x13x256
+            shortcut = slim.conv2d(
+                net, 512, [1, 1], stride=2, scope='shortcut3_4')
+            net = slim.conv2d(
+                net, 512, [3, 3], stride=2, scope='conv4_0')  # 13x13x512
+            net = slim.conv2d(
+                net + shortcut, 512, [3, 3], stride=1, scope='conv4_1')  # 13x13x512
 
             # reduce features to prediction
             net = slim.conv2d(net, num_outputs, [1, 1], stride=1,
-                              activation_fn=None, normalizer_fn=None, scope='logits')  # 13x13x45
+                              activation_fn=None, normalizer_fn=None, scope='conv5')  # 13x13x45
 
     return net
 
@@ -61,14 +77,14 @@ def compute_targets(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes, ancho
 
     # transform and scale bbox_pred to inp_size
     bbox_np = yolo2bbox(
-        np.ascontiguousarray(bbox_pred_np, dtype=np.float32),
-        np.ascontiguousarray(anchors, dtype=np.float32), h, w)
+        np.ascontiguousarray(bbox_pred_np, dtype=np.float),
+        np.ascontiguousarray(anchors, dtype=np.float), h, w)
     bbox_np = np.reshape(bbox_np, newshape=[-1, 4]) * cfg.inp_size
 
     # compute iou between bbox_np and gt_boxes, overlaps on coords
     box_ious = bbox_overlaps(
-        np.ascontiguousarray(bbox_np, dtype=np.float32),
-        np.ascontiguousarray(gt_boxes, dtype=np.float32))
+        np.ascontiguousarray(bbox_np, dtype=np.float),
+        np.ascontiguousarray(gt_boxes, dtype=np.float))
     box_ious = np.reshape(box_ious, newshape=[hw, num_anchors, -1])
 
     # select max iou for filtering negative bbox with iou_thresh
@@ -83,7 +99,8 @@ def compute_targets(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes, ancho
 
     cx = 0.5 * (gt_boxes[:, 0] + gt_boxes[:, 2])
     cy = 0.5 * (gt_boxes[:, 1] + gt_boxes[:, 3])
-    cell_inds = int(cx) * w + int(cy)
+    cell_inds = np.floor(cx) * w + np.floor(cy)
+    cell_inds = cell_inds.astype(np.int)
 
     # compute target_boxes for regression bbox_pred
     # target_boxes ~ gt_boxes
@@ -95,8 +112,8 @@ def compute_targets(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes, ancho
 
     # match best anchor for each gt_boxes, overlaps on area
     anchor_ious = anchor_overlaps(
-        np.ascontiguousarray(anchors, dtype=np.float32),
-        np.ascontiguousarray(gt_boxes, dtype=np.float32))
+        np.ascontiguousarray(anchors, dtype=np.float),
+        np.ascontiguousarray(gt_boxes, dtype=np.float))
     anchor_inds = np.argmax(anchor_ious, axis=0)
 
     # compute ground-truth and regression weights
@@ -106,7 +123,7 @@ def compute_targets(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes, ancho
         a = anchor_inds[i]
         # classes
         _cls_mask[cell_ind, a, :] = 1
-        _cls[cell_ind, a, gt_classes[i, 0]] = 1
+        _cls[cell_ind, a, gt_classes[i]] = 1
         # iou(coef)
         _iou_mask[cell_ind, a, :] = cfg.object_scale * \
             (1 - iou_pred_np[cell_ind, a, :])
@@ -129,19 +146,19 @@ class Network:
             tf.float32, shape=[1, cfg.inp_size, cfg.inp_size, 3])
         # [#box_im, (x_tl, y_tl, x_br, y_br)]
         self.boxes_ph = tf.placeholder(tf.float32, shape=[None, 4])
-        # [#box_im, (cls)]
-        self.classes_ph = tf.placeholder(tf.float32, shape=[None, 1])
+        # [#box_im] of classes
+        self.classes_ph = tf.placeholder(tf.int8, shape=[None])
         # target_size (height, width) anchors
         self.anchors_ph = tf.placeholder(
             tf.float32, shape=[cfg.num_anchors, 2])
 
-        logits = forward(self.images_ph, num_outputs=num_anchors *
+        logits = forward(self.images_ph, num_outputs=cfg.num_anchors *
                          (cfg.num_classes + 5), scope='yolo')
         logits_h, logits_w = logits.get_shape().as_list()[1:3]
 
         # flatten logits' cells
         logits = tf.reshape(
-            logits, shape=[-1, num_anchors, cfg.num_classes + 5])
+            logits, shape=[-1, cfg.num_anchors, cfg.num_classes + 5])
 
         # compute targets
         bbox_pred = tf.concat(
@@ -155,28 +172,30 @@ class Network:
 
         # network's losses
         self.cls_loss = tf.losses.softmax_cross_entropy(
-            onehot_labels=tf.reshape(_cls * _cls_mask, shape=[-1, cfg.num_classes]),
+            onehot_labels=tf.reshape(_cls, shape=[-1, cfg.num_classes]),
             logits=tf.reshape(logits[:, :, 5:] * _cls_mask, shape=[-1, cfg.num_classes]))
 
         # score = prob(object) * iou(bbox, object)
         self.iou_loss = tf.losses.mean_squared_error(labels=_iou * _iou_mask,
                                                      predictions=iou_pred * _iou_mask)
 
-        self.bbox_loss = tf.losses.mean_squared_error(labels=_box * _box_mask,
+        self.bbox_loss = tf.losses.mean_squared_error(labels=_box,
                                                       predictions=bbox_pred * _box_mask)
 
         self.total_loss = self.cls_loss + self.iou_loss + self.bbox_loss
 
         # network's optimizer
-        self.global_step = tf.Variable(initial_value=0, trainable=False, name='global_step')
+        self.global_step = tf.Variable(
+            initial_value=0, trainable=False, name='global_step')
 
         self.optimizer = tf.train.AdamOptimizer(learning_rate=cfg.learn_rate).minimize(
             loss=self.total_loss, global_step=self.global_step)
 
         # network's predictions in shape [hw, num_anchors, :]
         self.bbox_pred = tf.py_func(yolo2bbox,  # scale bbox_pred to 0~1
-                                [bbox_pred, self.anchors_ph, logits_h, logits_w],
-                                tf.float32, name='boxes_pred')
+                                    [bbox_pred, self.anchors_ph,
+                                        logits_h, logits_w],
+                                    tf.float32, name='boxes_pred')
 
         self.iou_pred = iou_pred
 
@@ -201,11 +220,11 @@ class Network:
 
     def train(self, image, boxes, classes, anchors):
         global_step, total_loss, _ = self.sess.run(
-                                            [self.global_step, self.total_loss, self.optimizer],
-                                            feed_dict={self.images_ph: image[np.newaxis],
-                                                       self.boxes_ph: boxes,
-                                                       self.classes_ph: classes,
-                                                       self.anchors_ph: anchors})
+            [self.global_step, self.total_loss, self.optimizer],
+            feed_dict={self.images_ph: image[np.newaxis],
+                       self.boxes_ph: boxes,
+                       self.classes_ph: classes,
+                       self.anchors_ph: anchors})
 
         return global_step, total_loss
 
@@ -216,8 +235,8 @@ class Network:
     def predict(self, scaled_image):
         # image must be scaled in inp_size
         bbox_pred, iou_pred, cls_pred = self.sess.run(
-                                            [self.bbox_pred, self.iou_pred, self.cls_pred],
-                                            feed_dict={self.images_ph: scaled_image})
+            [self.bbox_pred, self.iou_pred, self.cls_pred],
+            feed_dict={self.images_ph: scaled_image[np.newaxis]})
 
         return bbox_pred, iou_pred, cls_pred
 
