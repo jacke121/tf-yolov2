@@ -122,14 +122,15 @@ def compute_targets(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes, ancho
             continue
         a = anchor_inds[i]
         # classes
-        _cls_mask[cell_ind, a, :] = 1
+        _cls_mask[cell_ind, a, :] = cfg.cls_scale
         _cls[cell_ind, a, gt_classes[i]] = 1
         # iou(coef)
+        _iou_truth = box_ious[cell_ind, a, i]
         _iou_mask[cell_ind, a, :] = cfg.object_scale * \
-            (1 - iou_pred_np[cell_ind, a, :])
-        _iou[cell_ind, a, :] = box_ious[cell_ind, a, i]
-        # box_coords
-        _box_mask[cell_ind, a, :] = 1
+            (_iou_truth - iou_pred_np[cell_ind, a, :])
+        _iou[cell_ind, a, :] = _iou_truth
+        # coords
+        _box_mask[cell_ind, a, :] = cfg.box_scale
         target_boxes[i, 2:4] /= anchors[a]
         _box[cell_ind, a, :] = target_boxes[i]
 
@@ -155,7 +156,6 @@ class Network:
         logits = forward(self.images_ph, num_outputs=cfg.num_anchors *
                          (cfg.num_classes + 5), scope='yolo')
         logits_h, logits_w = logits.get_shape().as_list()[1:3]
-
         # flatten logits' cells
         logits = tf.reshape(
             logits, shape=[-1, cfg.num_anchors, cfg.num_classes + 5])
@@ -164,6 +164,7 @@ class Network:
         bbox_pred = tf.concat(
             [tf.sigmoid(logits[:, :, 0:2]), tf.exp(logits[:, :, 2:4])], axis=2)
         iou_pred = tf.sigmoid(logits[:, :, 4:5])
+        cls_pred = tf.nn.softmax(logits[:, :, 5:])  # on last dimension
 
         _cls, _cls_mask, _iou, _iou_mask, _box, _box_mask = tf.py_func(compute_targets,
                                                                        [logits_h, logits_w, bbox_pred, iou_pred,
@@ -171,23 +172,17 @@ class Network:
                                                                        [tf.float32] * 6, name='targets')
 
         # network's losses
-        self.cls_loss = tf.losses.softmax_cross_entropy(
-            onehot_labels=tf.reshape(_cls, shape=[-1, cfg.num_classes]),
-            logits=tf.reshape(logits[:, :, 5:] * _cls_mask, shape=[-1, cfg.num_classes]))
-
-        # score = prob(object) * iou(bbox, object)
+        self.cls_loss = tf.losses.mean_squared_error(labels=_cls * _cls_mask,
+                                                     predictions=cls_pred * _cls_mask)
         self.iou_loss = tf.losses.mean_squared_error(labels=_iou * _iou_mask,
                                                      predictions=iou_pred * _iou_mask)
-
-        self.bbox_loss = tf.losses.mean_squared_error(labels=_box,
+        self.bbox_loss = tf.losses.mean_squared_error(labels=_box * _box_mask,
                                                       predictions=bbox_pred * _box_mask)
-
         self.total_loss = self.cls_loss + self.iou_loss + self.bbox_loss
 
         # network's optimizer
         self.global_step = tf.Variable(
             initial_value=0, trainable=False, name='global_step')
-
         self.optimizer = tf.train.AdamOptimizer(learning_rate=cfg.learn_rate).minimize(
             loss=self.total_loss, global_step=self.global_step)
 
@@ -195,11 +190,9 @@ class Network:
         self.bbox_pred = tf.py_func(yolo2bbox,  # scale bbox_pred to 0~1
                                     [bbox_pred, self.anchors_ph,
                                         logits_h, logits_w],
-                                    tf.float32, name='boxes_pred')
-
+                                    tf.float32, name='bbox_pred')
         self.iou_pred = iou_pred
-
-        self.cls_pred = tf.nn.softmax(logits[:, :, 5:])  # on last dimension
+        self.cls_pred = cls_pred
 
         # network ckpt saver
         self.saver = tf.train.Saver()

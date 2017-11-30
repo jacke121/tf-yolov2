@@ -34,8 +34,10 @@ for label in label_names:
 
 # yolo configuration
 iou_thresh = 0.7
+cls_scale = 1
 object_scale = 5
 noobject_scale = 1
+box_scale = 1
 
 # training configuration
 num_epochs = 50
