@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 import config as cfg
 from network import Network
-from blob import prep_train_images_blob
+from blob import prep_test_images_blob
 from utils.anchors import get_anchors
 
 slim = tf.contrib.slim
@@ -20,7 +20,7 @@ print('loading anchors and dataset')
 anchors = get_anchors(target_size=(cfg.inp_size, cfg.inp_size))
 
 # scaled, normalized data
-blob_images, blob_boxes, blob_classes = prep_train_images_blob()
+blob_images, blob_boxes, blob_classes = prep_test_images_blob()
 num_images = len(blob_images)
 
 print('loaded {} images from dataset'.format(num_images))
@@ -36,4 +36,4 @@ for epoch in range(cfg.num_epochs):
             print('step {} - total loss {}'.format(step, loss))
 
     # net.save()
-    print('saved checkpoint')
+    # print('saved checkpoint')

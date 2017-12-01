@@ -163,22 +163,22 @@ class Network:
         # compute targets
         bbox_pred = tf.concat(
             [tf.sigmoid(logits[:, :, 0:2]), tf.exp(logits[:, :, 2:4])], axis=2)
-        iou_pred = tf.sigmoid(logits[:, :, 4:5])
-        cls_pred = tf.nn.softmax(logits[:, :, 5:])  # on last dimension
+        self.iou_pred = tf.sigmoid(logits[:, :, 4:5])
+        self.cls_pred = tf.nn.softmax(logits[:, :, 5:])  # on last dimension
 
         _cls, _cls_mask, _iou, _iou_mask, _box, _box_mask = tf.py_func(compute_targets,
-                                                                       [logits_h, logits_w, bbox_pred, iou_pred,
+                                                                       [logits_h, logits_w, bbox_pred, self.iou_pred,
                                                                         self.boxes_ph, self.classes_ph, self.anchors_ph],
                                                                        [tf.float32] * 6, name='targets')
 
         # network's losses
         self.cls_loss = tf.losses.mean_squared_error(labels=_cls * _cls_mask,
-                                                     predictions=cls_pred * _cls_mask)
+                                                     predictions=self.cls_pred * _cls_mask)
         self.iou_loss = tf.losses.mean_squared_error(labels=_iou * _iou_mask,
-                                                     predictions=iou_pred * _iou_mask)
-        self.bbox_loss = tf.losses.mean_squared_error(labels=_box * _box_mask,
-                                                      predictions=bbox_pred * _box_mask)
-        self.total_loss = self.cls_loss + self.iou_loss + self.bbox_loss
+                                                     predictions=self.iou_pred * _iou_mask)
+        self.box_loss = tf.losses.mean_squared_error(labels=_box * _box_mask,
+                                                     predictions=bbox_pred * _box_mask)
+        self.total_loss = self.cls_loss + self.iou_loss + self.box_loss
 
         # network's optimizer
         self.global_step = tf.Variable(
@@ -187,12 +187,10 @@ class Network:
             loss=self.total_loss, global_step=self.global_step)
 
         # network's predictions in shape [hw, num_anchors, :]
-        self.bbox_pred = tf.py_func(yolo2bbox,  # scale bbox_pred to 0~1
-                                    [bbox_pred, self.anchors_ph,
-                                        logits_h, logits_w],
-                                    tf.float32, name='bbox_pred')
-        self.iou_pred = iou_pred
-        self.cls_pred = cls_pred
+        self.box_pred = tf.py_func(yolo2bbox,  # scale bbox_pred to 0~1
+                                   [bbox_pred, self.anchors_ph,
+                                    logits_h, logits_w],
+                                   tf.float32, name='box_pred')
 
         # network ckpt saver
         self.saver = tf.train.Saver()
@@ -227,11 +225,11 @@ class Network:
 
     def predict(self, scaled_image):
         # image must be scaled in inp_size
-        bbox_pred, iou_pred, cls_pred = self.sess.run(
-            [self.bbox_pred, self.iou_pred, self.cls_pred],
+        box_pred, iou_pred, cls_pred = self.sess.run(
+            [self.box_pred, self.iou_pred, self.cls_pred],
             feed_dict={self.images_ph: scaled_image[np.newaxis]})
 
-        return bbox_pred, iou_pred, cls_pred
+        return box_pred, iou_pred, cls_pred
 
 
 if __name__ == '__main__':

@@ -7,7 +7,7 @@ import numpy as np
 model = 'detrac'
 
 # working directories
-train_data_dir = '/home/dat/data/detrac'
+data_dir = '/home/dat/data/detrac'
 
 yolo_dir = os.path.dirname(os.path.abspath(__file__))
 ckpt_dir = os.path.join(yolo_dir, 'ckpt')

@@ -27,12 +27,12 @@ def nms_detections(boxes_pred, scores, nms_thresh):
     return nms(dets, nms_thresh, force_cpu=False)
 
 
-def preprocess(bbox_pred, iou_pred, cls_pred, im_shape, thresh):
+def preprocess(box_pred, iou_pred, cls_pred, im_shape, thresh):
     # flatten logits' cells with anchors
-    bbox_pred = np.reshape(bbox_pred, newshape=[-1, 4])
-    bbox_pred[:, 0::2] *= float(im_shape[0])
-    bbox_pred[:, 1::2] *= float(im_shape[1])
-    bbox_pred = bbox_pred.astype(np.int)
+    box_pred = np.reshape(box_pred, newshape=[-1, 4])
+    box_pred[:, 0::2] *= float(im_shape[0])
+    box_pred[:, 1::2] *= float(im_shape[1])
+    box_pred = box_pred.astype(np.int)
 
     iou_pred = np.reshape(iou_pred, newshape=[-1])
     cls_pred = np.reshape(cls_pred, newshape=[-1, cfg.num_classes])
@@ -42,12 +42,12 @@ def preprocess(bbox_pred, iou_pred, cls_pred, im_shape, thresh):
 
     # select positive boxes with score larger than thresh
     keep_inds = np.where(scores > thresh)[0]
-    bbox_pred = bbox_pred[keep_inds]
+    box_pred = box_pred[keep_inds]
     cls_inds = cls_inds[keep_inds]
     scores = scores[keep_inds]
 
     # apply nms to remove overlap boxes
-    keep_inds = np.zeros(len(bbox_pred), dtype=np.int)
+    keep_inds = np.zeros(len(box_pred), dtype=np.int)
     for c in range(cfg.num_classes):
         inds = np.where(cls_inds == c)[0]
         if len(inds) == 0:
@@ -57,33 +57,28 @@ def preprocess(bbox_pred, iou_pred, cls_pred, im_shape, thresh):
         keep_inds[inds[keep]] = 1
 
     keep_inds = np.where(keep_inds > 0)[0]
-    bbox_pred = bbox_pred[keep_inds]
+    box_pred = box_pred[keep_inds]
     cls_inds = cls_inds[keep_inds]
     scores = scores[keep_inds]
 
-    bbox_pred = clip_boxes(bbox_pred, im_shape)
+    box_pred = clip_boxes(box_pred, im_shape)
 
-    return bbox_pred, cls_inds, scores
+    return box_pred, cls_inds, scores
 
 
-def draw_targets(image, bbox_pred, cls_inds, scores):
-    for b in range(bbox_pred.shape[0]):
+def draw_targets(image, box_pred, cls_inds, scores):
+    for b in range(box_pred.shape[0]):
         box_cls = cls_inds[b]
         if box_cls == 0:  # skip for others/background boxes
             continue
 
         box_label = cfg.label_names[box_cls]
         box_color = cfg.label_colors[box_label]
+        p1 = (box_pred[b, 1], box_pred[b, 0])
+        p2 = (box_pred[b, 3], box_pred[b, 1])
 
-        cv2.rectangle(image,
-                      (bbox_pred[b, 1], bbox_pred[b, 0]),
-                      (bbox_pred[b, 3], bbox_pred[b, 1]),
-                      box_color, 2)
-
-        cv2.putText(image,
-                    '{}_{:.3f}'.format(box_label, scores[b]),
-                    (bbox_pred[b, 1], bbox_pred[b, 0] - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6, box_color)
+        cv2.rectangle(image, p1, p2, box_color, 2)
+        cv2.putText(image, '{}_{:.3f}'.format(
+            box_label, scores[b]), p1, cv2.FONT_HERSHEY_SIMPLEX, 0.5, box_color)
 
     return image

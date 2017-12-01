@@ -1,4 +1,5 @@
 *.so
 *.txt
+.vscode/
 __pycache__/
 ckpt/

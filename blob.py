@@ -10,12 +10,11 @@ for idx, label in enumerate(cfg.label_names):
     label2cls[label] = idx
 
 
-def prep_image_train(xml):
+def prep_image(anno_dir, xml):
     # images in shape of [height, width, num_channels]
     # bboxes in shape of [num_gt_boxes, (xmin, ymin, xmax, ymax)], scaled in cfg.inp_size
     # bclasses in shape of [num_gt_boxes, (cls)]
-    root = ctree.parse(os.path.join(
-        cfg.train_data_dir, 'annotation_test', xml)).getroot()
+    root = ctree.parse(os.path.join(anno_dir, xml)).getroot()
     image_name = root.find('filename').text
     image_size = root.find('size')
     image_height = float(image_size.find('height').text)
@@ -38,20 +37,35 @@ def prep_image_train(xml):
 
     classes = np.array(classes, dtype=np.float32)
 
-    image = cv2.imread(os.path.join(cfg.train_data_dir, 'images_test', image_name))
+    image = cv2.imread(os.path.join(cfg.data_dir, 'images', image_name))
     image = cv2.resize(image, (cfg.inp_size, cfg.inp_size)) / 255.0
 
     return image, boxes, classes
 
 
-def prep_train_images_blob():
-    blob_images = []
-    blob_boxes = []
-    blob_classes = []
-    for xml in os.listdir(os.path.join(cfg.train_data_dir, 'annotation_test')):
-        image, boxes, classes = prep_image_train(xml)
-        blob_images.append(image)
-        blob_boxes.append(boxes)
-        blob_classes.append(classes)
+class BlobLoader:
+    def __init__(self, anno_dir, batch_size=1):
+        self.anno_dir = anno_dir
+        self.anno = os.listdir(os.path.join(cfg.data_dir, anno_dir))
+        self.num_anno = len(self.anno)
+        self.batch_size = batch_size
 
-    return blob_images, blob_boxes, blob_classes
+    def next_batch(self):
+        batch_images = []
+        batch_boxes = []
+        batch_classes = []
+        while True:
+            for xml in self.anno[np.random.choice(self.num_anno, self.batch_size, replace=False)]:
+                image, boxes, classes = prep_image(self.anno_dir, xml)
+                batch_images.append(image)
+                batch_boxes.append(boxes)
+                batch_classes.append(classes)
+
+            yield batch_images, batch_boxes, batch_classes
+
+            del batch_images
+            del batch_boxes
+            del batch_classes
+            batch_images = []
+            batch_boxes = []
+            batch_classes = []
