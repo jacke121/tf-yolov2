@@ -87,31 +87,35 @@ def anchor_overlaps(
     return overlaps
 
 def yolo2bbox(  # similar to bbox_transform_inv of faster-rcnn
-        np.ndarray[DTYPE_t, ndim=3] bbox_pred,
+        np.ndarray[DTYPE_t, ndim=4] bbox_pred,
         np.ndarray[DTYPE_t, ndim=2] anchors, 
         int H, int W):
     """
     Parameters
     ----------
-    bbox_pred: (HxW, num_anchors, 4) ndarray of float (sig(tx), sig(ty), exp(th), exp(tw))
-    anchors: (num_anchors, 2) (ph, pw)
+    bbox_pred: 4-dim float ndarray [bsize, HxW, num_anchors, 4] of (sig(tx), sig(ty), exp(th), exp(tw))
+    anchors: [num_anchors, 2] of (ph, pw)
     H, W: height, width of features map
     Returns
     -------
     bbox_out: (HxW, num_anchors, 4) ndarray of bbox (x1, y1, x2, y2) rescaled to (0, 1)
     """
+    cdef unsigned int bsize = bbox_pred.shape[0]
     cdef unsigned int num_anchors = anchors.shape[0]
-    cdef np.ndarray[DTYPE_t, ndim=3] bbox_scale = np.zeros((H*W, num_anchors, 4), dtype=DTYPE)
-    for row in range(H):
-        for col in range(W):
-            ind = row * W + col
-            for a in range(num_anchors):
-                cx = row + bbox_pred[ind, a, 0]
-                cy = col + bbox_pred[ind, a, 1]
-                bh = bbox_pred[ind, a, 2] * anchors[a, 0] * 0.5
-                bw = bbox_pred[ind, a, 3] * anchors[a, 1] * 0.5
-                bbox_scale[ind, a, 0] = (cx - bh) / H
-                bbox_scale[ind, a, 1] = (cy - bw) / W
-                bbox_scale[ind, a, 2] = (cx + bh) / H
-                bbox_scale[ind, a, 3] = (cy + bw) / W
+    cdef np.ndarray[DTYPE_t, ndim=3] bbox_scale = np.zeros((bsize, H*W, num_anchors, 4), dtype=DTYPE)
+    
+    for b in range(bsize):
+        for row in range(H):
+            for col in range(W):
+                ind = row * W + col
+                for a in range(num_anchors):
+                    cx = row + bbox_pred[b, ind, a, 0]
+                    cy = col + bbox_pred[b, ind, a, 1]
+                    bh = bbox_pred[b, ind, a, 2] * anchors[a, 0] * 0.5
+                    bw = bbox_pred[b, ind, a, 3] * anchors[a, 1] * 0.5
+                    bbox_scale[b, ind, a, 0] = (cx - bh) / H
+                    bbox_scale[b, ind, a, 1] = (cy - bw) / W
+                    bbox_scale[b, ind, a, 2] = (cx + bh) / H
+                    bbox_scale[b, ind, a, 3] = (cy + bw) / W
+
     return bbox_scale

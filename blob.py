@@ -47,19 +47,24 @@ class BlobLoader:
     def __init__(self, anno_dir, batch_size=1):
         self.anno_dir = anno_dir
         self.anno = os.listdir(os.path.join(cfg.data_dir, anno_dir))
+        np.random.shuffle(self.anno)
         self.num_anno = len(self.anno)
         self.batch_size = batch_size
+        self.start_idx = 0
 
     def next_batch(self):
         batch_images = []
         batch_boxes = []
         batch_classes = []
         while True:
-            for xml in self.anno[np.random.choice(self.num_anno, self.batch_size, replace=False)]:
+            end_idx = min(self.start_idx + self.batch_size, self.num_anno)
+            for xml in self.anno[self.start_idx:end_idx]:
                 image, boxes, classes = prep_image(self.anno_dir, xml)
                 batch_images.append(image)
                 batch_boxes.append(boxes)
                 batch_classes.append(classes)
+
+            self.start_idx = 0 if end_idx == self.num_anno else end_idx
 
             yield batch_images, batch_boxes, batch_classes
 

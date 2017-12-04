@@ -17,7 +17,7 @@ def forward(inputs, num_outputs, scope=None):  # define network architecture in 
     # network forwarding
     with tf.variable_scope(scope, 'net', [inputs], reuse=tf.AUTO_REUSE):
         with slim.arg_scope([slim.conv2d],
-                            activation_fn=leaky,
+                            activation_fn=tf.nn.relu,
                             normalizer_fn=slim.batch_norm,
                             weights_initializer=tf.truncated_normal_initializer(
                                 stddev=0.01),
@@ -142,14 +142,15 @@ class Network:
         # tf session
         self.sess = session
 
-        # tf input placeholders, batch size must be 1
+        # tf input placeholders, batch size should be 2
+        # [#im, height, width, depth]
         self.images_ph = tf.placeholder(
-            tf.float32, shape=[1, cfg.inp_size, cfg.inp_size, 3])
-        # [#box_im, (x_tl, y_tl, x_br, y_br)]
-        self.boxes_ph = tf.placeholder(tf.float32, shape=[None, 4])
-        # [#box_im] of classes
-        self.classes_ph = tf.placeholder(tf.int8, shape=[None])
-        # target_size (height, width) anchors
+            tf.float32, shape=[None, cfg.inp_size, cfg.inp_size, 3])
+        # [#im, #box_im, (x_tl, y_tl, x_br, y_br)]
+        self.boxes_ph = tf.placeholder(tf.float32, shape=None)
+        # [#im, #box_im] of classes
+        self.classes_ph = tf.placeholder(tf.int8, shape=None)
+        # [#anchors, (height, width)]
         self.anchors_ph = tf.placeholder(
             tf.float32, shape=[cfg.num_anchors, 2])
 
@@ -158,13 +159,13 @@ class Network:
         logits_h, logits_w = logits.get_shape().as_list()[1:3]
         # flatten logits' cells
         logits = tf.reshape(
-            logits, shape=[-1, cfg.num_anchors, cfg.num_classes + 5])
+            logits, shape=[-1, logits_h * logits_w, cfg.num_anchors, cfg.num_classes + 5])
 
         # compute targets
         bbox_pred = tf.concat(
-            [tf.sigmoid(logits[:, :, 0:2]), tf.exp(logits[:, :, 2:4])], axis=2)
-        self.iou_pred = tf.sigmoid(logits[:, :, 4:5])
-        self.cls_pred = tf.nn.softmax(logits[:, :, 5:])  # on last dimension
+            [tf.sigmoid(logits[:, :, :, 0:2]), tf.exp(logits[:, :, :, 2:4])], axis=2)
+        self.iou_pred = tf.sigmoid(logits[:.:, :, 4:5])
+        self.cls_pred = tf.nn.softmax(logits[:, :, :, 5:])  # on last dimension
 
         _cls, _cls_mask, _iou, _iou_mask, _box, _box_mask = tf.py_func(compute_targets,
                                                                        [logits_h, logits_w, bbox_pred, self.iou_pred,
@@ -207,14 +208,16 @@ class Network:
             print('restored checkpoint from:', last_ckpt_path)
         except:
             print('init variables instead of restoring')
-            self.sess.run(tf.global_variables_initializer())
+            # self.sess.run(tf.global_variables_initializer())
+            # restore pretrained models (slim)
+            raise Exception('failed failed failed')
 
-    def train(self, image, boxes, classes, anchors):
+    def train(self, batch_images, batch_boxes, batch_classes, anchors):
         global_step, total_loss, _ = self.sess.run(
             [self.global_step, self.total_loss, self.optimizer],
-            feed_dict={self.images_ph: image[np.newaxis],
-                       self.boxes_ph: boxes,
-                       self.classes_ph: classes,
+            feed_dict={self.images_ph: batch_images,
+                       self.boxes_ph: batch_boxes,
+                       self.classes_ph: batch_classes,
                        self.anchors_ph: anchors})
 
         return global_step, total_loss
@@ -224,7 +227,7 @@ class Network:
                         global_step=self.global_step)
 
     def predict(self, scaled_image):
-        # image must be scaled in inp_size
+        # only 1 image must be scaled in inp_size
         box_pred, iou_pred, cls_pred = self.sess.run(
             [self.box_pred, self.iou_pred, self.cls_pred],
             feed_dict={self.images_ph: scaled_image[np.newaxis]})
