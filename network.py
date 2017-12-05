@@ -60,8 +60,8 @@ def forward(inputs, num_outputs, scope=None):  # define network architecture in 
 
 
 def compute_targets(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes, anchors):
-    # only 1 image per batch
-    hw, num_anchors = bbox_pred_np.shape[0:2]  # a is num of anchors
+    # only 1 image in processing
+    hw, num_anchors, _ = bbox_pred_np.shape
 
     # compute ground-truth and regression weights (mask)
     # classes
@@ -137,6 +137,20 @@ def compute_targets(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes, ancho
     return _cls, _cls_mask, _iou, _iou_mask, _box, _box_mask
 
 
+def compute_targets_batch(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes, anchors):
+    targets = [compute_targets(h, w, bbox_pred_np[b], iou_pred_np[b], gt_boxes[b],
+                               gt_classes[b], anchors) for b in range(bbox_pred_np.shape[0])]
+
+    _cls = np.stack(target[0] for target in targets)
+    _cls_mask = np.stack(target[1] for target in targets)
+    _iou = np.stack(target[2] for target in targets)
+    _iou_mask = np.stack(target[3] for target in targets)
+    _box = np.stack(target[4] for target in targets)
+    _box_mask = np.stack(target[5] for target in targets)
+
+    return _cls, _cls_mask, _iou, _iou_mask, _box, _box_mask
+
+
 class Network:
     def __init__(self, session):
         # tf session
@@ -156,18 +170,18 @@ class Network:
 
         logits = forward(self.images_ph, num_outputs=cfg.num_anchors *
                          (cfg.num_classes + 5), scope='yolo')
-        logits_h, logits_w = logits.get_shape().as_list()[1:3]
+        bsize, logits_h, logits_w, _ = logits.get_shape().as_list()
         # flatten logits' cells
         logits = tf.reshape(
-            logits, shape=[-1, logits_h * logits_w, cfg.num_anchors, cfg.num_classes + 5])
+            logits, shape=[bsize, logits_h * logits_w, cfg.num_anchors, cfg.num_classes + 5])
 
         # compute targets
         bbox_pred = tf.concat(
-            [tf.sigmoid(logits[:, :, :, 0:2]), tf.exp(logits[:, :, :, 2:4])], axis=2)
-        self.iou_pred = tf.sigmoid(logits[:.:, :, 4:5])
+            [tf.sigmoid(logits[:, :, :, 0:2]), tf.exp(logits[:, :, :, 2:4])], axis=3)
+        self.iou_pred = tf.sigmoid(logits[:, :, :, 4:5])  # keep dims
         self.cls_pred = tf.nn.softmax(logits[:, :, :, 5:])  # on last dimension
 
-        _cls, _cls_mask, _iou, _iou_mask, _box, _box_mask = tf.py_func(compute_targets,
+        _cls, _cls_mask, _iou, _iou_mask, _box, _box_mask = tf.py_func(compute_targets_batch,
                                                                        [logits_h, logits_w, bbox_pred, self.iou_pred,
                                                                         self.boxes_ph, self.classes_ph, self.anchors_ph],
                                                                        [tf.float32] * 6, name='targets')
@@ -189,7 +203,7 @@ class Network:
 
         # network's predictions in shape [hw, num_anchors, :]
         self.box_pred = tf.py_func(yolo2bbox,  # scale bbox_pred to 0~1
-                                   [bbox_pred, self.anchors_ph,
+                                   [bbox_pred[0], self.anchors_ph,
                                     logits_h, logits_w],
                                    tf.float32, name='box_pred')
 
@@ -208,9 +222,13 @@ class Network:
             print('restored checkpoint from:', last_ckpt_path)
         except:
             print('init variables instead of restoring')
-            # self.sess.run(tf.global_variables_initializer())
+            self.sess.run(tf.global_variables_initializer())
             # restore pretrained models (slim)
             raise Exception('failed failed failed')
+
+    def compute_map(self):
+        # compute mAP for evaluating network
+        pass
 
     def train(self, batch_images, batch_boxes, batch_classes, anchors):
         global_step, total_loss, _ = self.sess.run(
@@ -225,6 +243,7 @@ class Network:
     def save(self):
         self.saver.save(sess=self.sess, save_path=cfg.save_path,
                         global_step=self.global_step)
+        print('saved checkpoint')
 
     def predict(self, scaled_image):
         # only 1 image must be scaled in inp_size

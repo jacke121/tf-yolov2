@@ -2902,7 +2902,7 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_2anchor_overlaps(CYTHON_UNUSED Py
 
 /* Python wrapper */
 static PyObject *__pyx_pw_5utils_11cython_bbox_5yolo2bbox(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_5utils_11cython_bbox_4yolo2bbox[] = "\n    Parameters\n    ----------\n    bbox_pred: (HxW, num_anchors, 4) ndarray of float (sig(tx), sig(ty), exp(th), exp(tw))\n    anchors: (num_anchors, 2) (ph, pw)\n    H, W: height, width of features map\n    Returns\n    -------\n    bbox_out: (HxW, num_anchors, 4) ndarray of bbox (x1, y1, x2, y2) rescaled to (0, 1)\n    ";
+static char __pyx_doc_5utils_11cython_bbox_4yolo2bbox[] = "\n    Parameters\n    ----------\n    bbox_pred: 3-dim float ndarray [HxW, num_anchors, 4] of (sig(tx), sig(ty), exp(th), exp(tw))\n    anchors: [num_anchors, 2] of (ph, pw)\n    H, W: height, width of features map\n    Returns\n    -------\n    bbox_scale: [HxW, num_anchors, 4] ndarray of bbox (x1, y1, x2, y2) rescaled to (0, 1)\n    ";
 static PyMethodDef __pyx_mdef_5utils_11cython_bbox_5yolo2bbox = {"yolo2bbox", (PyCFunction)__pyx_pw_5utils_11cython_bbox_5yolo2bbox, METH_VARARGS|METH_KEYWORDS, __pyx_doc_5utils_11cython_bbox_4yolo2bbox};
 static PyObject *__pyx_pw_5utils_11cython_bbox_5yolo2bbox(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_bbox_pred = 0;
@@ -3052,11 +3052,11 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
   __pyx_pybuffernd_anchors.diminfo[0].strides = __pyx_pybuffernd_anchors.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_anchors.diminfo[0].shape = __pyx_pybuffernd_anchors.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_anchors.diminfo[1].strides = __pyx_pybuffernd_anchors.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_anchors.diminfo[1].shape = __pyx_pybuffernd_anchors.rcbuffer->pybuffer.shape[1];
 
   /* "utils/bbox.pyx":103
- *     bbox_out: (HxW, num_anchors, 4) ndarray of bbox (x1, y1, x2, y2) rescaled to (0, 1)
+ *     bbox_scale: [HxW, num_anchors, 4] ndarray of bbox (x1, y1, x2, y2) rescaled to (0, 1)
  *     """
  *     cdef unsigned int num_anchors = anchors.shape[0]             # <<<<<<<<<<<<<<
  *     cdef np.ndarray[DTYPE_t, ndim=3] bbox_scale = np.zeros((H*W, num_anchors, 4), dtype=DTYPE)
- *     for row in range(H):
+ * 
  */
   __pyx_v_num_anchors = (__pyx_v_anchors->dimensions[0]);
 
@@ -3064,8 +3064,8 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
  *     """
  *     cdef unsigned int num_anchors = anchors.shape[0]
  *     cdef np.ndarray[DTYPE_t, ndim=3] bbox_scale = np.zeros((H*W, num_anchors, 4), dtype=DTYPE)             # <<<<<<<<<<<<<<
+ * 
  *     for row in range(H):
- *         for col in range(W):
  */
   __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -3117,30 +3117,30 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
   __pyx_v_bbox_scale = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "utils/bbox.pyx":105
- *     cdef unsigned int num_anchors = anchors.shape[0]
+  /* "utils/bbox.pyx":106
  *     cdef np.ndarray[DTYPE_t, ndim=3] bbox_scale = np.zeros((H*W, num_anchors, 4), dtype=DTYPE)
+ * 
  *     for row in range(H):             # <<<<<<<<<<<<<<
  *         for col in range(W):
  *             ind = row * W + col
  */
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_H); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_H); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 105, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 106, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_1);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_1);
   __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_4, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
     __pyx_t_4 = __pyx_t_1; __Pyx_INCREF(__pyx_t_4); __pyx_t_6 = 0;
     __pyx_t_7 = NULL;
   } else {
-    __pyx_t_6 = -1; __pyx_t_4 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 105, __pyx_L1_error)
+    __pyx_t_6 = -1; __pyx_t_4 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 106, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_7 = Py_TYPE(__pyx_t_4)->tp_iternext; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 105, __pyx_L1_error)
+    __pyx_t_7 = Py_TYPE(__pyx_t_4)->tp_iternext; if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 106, __pyx_L1_error)
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   for (;;) {
@@ -3148,17 +3148,17 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
       if (likely(PyList_CheckExact(__pyx_t_4))) {
         if (__pyx_t_6 >= PyList_GET_SIZE(__pyx_t_4)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_4, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 105, __pyx_L1_error)
+        __pyx_t_1 = PyList_GET_ITEM(__pyx_t_4, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 106, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       } else {
         if (__pyx_t_6 >= PyTuple_GET_SIZE(__pyx_t_4)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 105, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_4, __pyx_t_6); __Pyx_INCREF(__pyx_t_1); __pyx_t_6++; if (unlikely(0 < 0)) __PYX_ERR(0, 106, __pyx_L1_error)
         #else
-        __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(__pyx_t_4, __pyx_t_6); __pyx_t_6++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         #endif
       }
@@ -3168,7 +3168,7 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 105, __pyx_L1_error)
+          else __PYX_ERR(0, 106, __pyx_L1_error)
         }
         break;
       }
@@ -3177,30 +3177,30 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
     __Pyx_XDECREF_SET(__pyx_v_row, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "utils/bbox.pyx":106
- *     cdef np.ndarray[DTYPE_t, ndim=3] bbox_scale = np.zeros((H*W, num_anchors, 4), dtype=DTYPE)
+    /* "utils/bbox.pyx":107
+ * 
  *     for row in range(H):
  *         for col in range(W):             # <<<<<<<<<<<<<<
  *             ind = row * W + col
  *             for a in range(num_anchors):
  */
-    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_W); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_W); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 106, __pyx_L1_error)
+    __pyx_t_3 = PyTuple_New(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 107, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_GIVEREF(__pyx_t_1);
     PyTuple_SET_ITEM(__pyx_t_3, 0, __pyx_t_1);
     __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_3, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_builtin_range, __pyx_t_3, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (likely(PyList_CheckExact(__pyx_t_1)) || PyTuple_CheckExact(__pyx_t_1)) {
       __pyx_t_3 = __pyx_t_1; __Pyx_INCREF(__pyx_t_3); __pyx_t_8 = 0;
       __pyx_t_9 = NULL;
     } else {
-      __pyx_t_8 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 106, __pyx_L1_error)
+      __pyx_t_8 = -1; __pyx_t_3 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 107, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_9 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 106, __pyx_L1_error)
+      __pyx_t_9 = Py_TYPE(__pyx_t_3)->tp_iternext; if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 107, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     for (;;) {
@@ -3208,17 +3208,17 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         if (likely(PyList_CheckExact(__pyx_t_3))) {
           if (__pyx_t_8 >= PyList_GET_SIZE(__pyx_t_3)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_1 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_8); __Pyx_INCREF(__pyx_t_1); __pyx_t_8++; if (unlikely(0 < 0)) __PYX_ERR(0, 106, __pyx_L1_error)
+          __pyx_t_1 = PyList_GET_ITEM(__pyx_t_3, __pyx_t_8); __Pyx_INCREF(__pyx_t_1); __pyx_t_8++; if (unlikely(0 < 0)) __PYX_ERR(0, 107, __pyx_L1_error)
           #else
-          __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
+          __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           #endif
         } else {
           if (__pyx_t_8 >= PyTuple_GET_SIZE(__pyx_t_3)) break;
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_8); __Pyx_INCREF(__pyx_t_1); __pyx_t_8++; if (unlikely(0 < 0)) __PYX_ERR(0, 106, __pyx_L1_error)
+          __pyx_t_1 = PyTuple_GET_ITEM(__pyx_t_3, __pyx_t_8); __Pyx_INCREF(__pyx_t_1); __pyx_t_8++; if (unlikely(0 < 0)) __PYX_ERR(0, 107, __pyx_L1_error)
           #else
-          __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 106, __pyx_L1_error)
+          __pyx_t_1 = PySequence_ITEM(__pyx_t_3, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           #endif
         }
@@ -3228,7 +3228,7 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(0, 106, __pyx_L1_error)
+            else __PYX_ERR(0, 107, __pyx_L1_error)
           }
           break;
         }
@@ -3237,25 +3237,25 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
       __Pyx_XDECREF_SET(__pyx_v_col, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "utils/bbox.pyx":107
+      /* "utils/bbox.pyx":108
  *     for row in range(H):
  *         for col in range(W):
  *             ind = row * W + col             # <<<<<<<<<<<<<<
  *             for a in range(num_anchors):
  *                 cx = row + bbox_pred[ind, a, 0]
  */
-      __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_W); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_W); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
-      __pyx_t_2 = PyNumber_Multiply(__pyx_v_row, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 107, __pyx_L1_error)
+      __pyx_t_2 = PyNumber_Multiply(__pyx_v_row, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 108, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-      __pyx_t_1 = PyNumber_Add(__pyx_t_2, __pyx_v_col); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 107, __pyx_L1_error)
+      __pyx_t_1 = PyNumber_Add(__pyx_t_2, __pyx_v_col); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __Pyx_XDECREF_SET(__pyx_v_ind, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "utils/bbox.pyx":108
+      /* "utils/bbox.pyx":109
  *         for col in range(W):
  *             ind = row * W + col
  *             for a in range(num_anchors):             # <<<<<<<<<<<<<<
@@ -3266,16 +3266,16 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
       for (__pyx_t_11 = 0; __pyx_t_11 < __pyx_t_10; __pyx_t_11+=1) {
         __pyx_v_a = __pyx_t_11;
 
-        /* "utils/bbox.pyx":109
+        /* "utils/bbox.pyx":110
  *             ind = row * W + col
  *             for a in range(num_anchors):
  *                 cx = row + bbox_pred[ind, a, 0]             # <<<<<<<<<<<<<<
  *                 cy = col + bbox_pred[ind, a, 1]
  *                 bh = bbox_pred[ind, a, 2] * anchors[a, 0] * 0.5
  */
-        __pyx_t_1 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 109, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 109, __pyx_L1_error)
+        __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_INCREF(__pyx_v_ind);
         __Pyx_GIVEREF(__pyx_v_ind);
@@ -3286,25 +3286,25 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         __Pyx_GIVEREF(__pyx_int_0);
         PyTuple_SET_ITEM(__pyx_t_2, 2, __pyx_int_0);
         __pyx_t_1 = 0;
-        __pyx_t_1 = PyObject_GetItem(((PyObject *)__pyx_v_bbox_pred), __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 109, __pyx_L1_error)
+        __pyx_t_1 = PyObject_GetItem(((PyObject *)__pyx_v_bbox_pred), __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __pyx_t_2 = PyNumber_Add(__pyx_v_row, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 109, __pyx_L1_error)
+        __pyx_t_2 = PyNumber_Add(__pyx_v_row, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_XDECREF_SET(__pyx_v_cx, __pyx_t_2);
         __pyx_t_2 = 0;
 
-        /* "utils/bbox.pyx":110
+        /* "utils/bbox.pyx":111
  *             for a in range(num_anchors):
  *                 cx = row + bbox_pred[ind, a, 0]
  *                 cy = col + bbox_pred[ind, a, 1]             # <<<<<<<<<<<<<<
  *                 bh = bbox_pred[ind, a, 2] * anchors[a, 0] * 0.5
  *                 bw = bbox_pred[ind, a, 3] * anchors[a, 1] * 0.5
  */
-        __pyx_t_2 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 111, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_INCREF(__pyx_v_ind);
         __Pyx_GIVEREF(__pyx_v_ind);
@@ -3315,25 +3315,25 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         __Pyx_GIVEREF(__pyx_int_1);
         PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_int_1);
         __pyx_t_2 = 0;
-        __pyx_t_2 = PyObject_GetItem(((PyObject *)__pyx_v_bbox_pred), __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
+        __pyx_t_2 = PyObject_GetItem(((PyObject *)__pyx_v_bbox_pred), __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __pyx_t_1 = PyNumber_Add(__pyx_v_col, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 110, __pyx_L1_error)
+        __pyx_t_1 = PyNumber_Add(__pyx_v_col, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 111, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __Pyx_XDECREF_SET(__pyx_v_cy, __pyx_t_1);
         __pyx_t_1 = 0;
 
-        /* "utils/bbox.pyx":111
+        /* "utils/bbox.pyx":112
  *                 cx = row + bbox_pred[ind, a, 0]
  *                 cy = col + bbox_pred[ind, a, 1]
  *                 bh = bbox_pred[ind, a, 2] * anchors[a, 0] * 0.5             # <<<<<<<<<<<<<<
  *                 bw = bbox_pred[ind, a, 3] * anchors[a, 1] * 0.5
  *                 bbox_scale[ind, a, 0] = (cx - bh) / H
  */
-        __pyx_t_1 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 112, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_INCREF(__pyx_v_ind);
         __Pyx_GIVEREF(__pyx_v_ind);
@@ -3344,7 +3344,7 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         __Pyx_GIVEREF(__pyx_int_2);
         PyTuple_SET_ITEM(__pyx_t_2, 2, __pyx_int_2);
         __pyx_t_1 = 0;
-        __pyx_t_1 = PyObject_GetItem(((PyObject *)__pyx_v_bbox_pred), __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_1 = PyObject_GetItem(((PyObject *)__pyx_v_bbox_pred), __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __pyx_t_12 = __pyx_v_a;
@@ -3357,30 +3357,30 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         } else if (unlikely(__pyx_t_13 >= __pyx_pybuffernd_anchors.diminfo[1].shape)) __pyx_t_14 = 1;
         if (unlikely(__pyx_t_14 != -1)) {
           __Pyx_RaiseBufferIndexError(__pyx_t_14);
-          __PYX_ERR(0, 111, __pyx_L1_error)
+          __PYX_ERR(0, 112, __pyx_L1_error)
         }
-        __pyx_t_2 = PyFloat_FromDouble((*__Pyx_BufPtrStrided2d(__pyx_t_5utils_11cython_bbox_DTYPE_t *, __pyx_pybuffernd_anchors.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_anchors.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_anchors.diminfo[1].strides))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_2 = PyFloat_FromDouble((*__Pyx_BufPtrStrided2d(__pyx_t_5utils_11cython_bbox_DTYPE_t *, __pyx_pybuffernd_anchors.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_anchors.diminfo[0].strides, __pyx_t_13, __pyx_pybuffernd_anchors.diminfo[1].strides))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 112, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_15 = PyNumber_Multiply(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_15 = PyNumber_Multiply(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 112, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __pyx_t_2 = PyNumber_Multiply(__pyx_t_15, __pyx_float_0_5); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 111, __pyx_L1_error)
+        __pyx_t_2 = PyNumber_Multiply(__pyx_t_15, __pyx_float_0_5); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 112, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
         __Pyx_XDECREF_SET(__pyx_v_bh, __pyx_t_2);
         __pyx_t_2 = 0;
 
-        /* "utils/bbox.pyx":112
+        /* "utils/bbox.pyx":113
  *                 cy = col + bbox_pred[ind, a, 1]
  *                 bh = bbox_pred[ind, a, 2] * anchors[a, 0] * 0.5
  *                 bw = bbox_pred[ind, a, 3] * anchors[a, 1] * 0.5             # <<<<<<<<<<<<<<
  *                 bbox_scale[ind, a, 0] = (cx - bh) / H
  *                 bbox_scale[ind, a, 1] = (cy - bw) / W
  */
-        __pyx_t_2 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_15 = PyTuple_New(3); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_15 = PyTuple_New(3); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 113, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
         __Pyx_INCREF(__pyx_v_ind);
         __Pyx_GIVEREF(__pyx_v_ind);
@@ -3391,7 +3391,7 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         __Pyx_GIVEREF(__pyx_int_3);
         PyTuple_SET_ITEM(__pyx_t_15, 2, __pyx_int_3);
         __pyx_t_2 = 0;
-        __pyx_t_2 = PyObject_GetItem(((PyObject *)__pyx_v_bbox_pred), __pyx_t_15); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_2 = PyObject_GetItem(((PyObject *)__pyx_v_bbox_pred), __pyx_t_15); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
         __pyx_t_16 = __pyx_v_a;
@@ -3404,38 +3404,38 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         } else if (unlikely(__pyx_t_17 >= __pyx_pybuffernd_anchors.diminfo[1].shape)) __pyx_t_14 = 1;
         if (unlikely(__pyx_t_14 != -1)) {
           __Pyx_RaiseBufferIndexError(__pyx_t_14);
-          __PYX_ERR(0, 112, __pyx_L1_error)
+          __PYX_ERR(0, 113, __pyx_L1_error)
         }
-        __pyx_t_15 = PyFloat_FromDouble((*__Pyx_BufPtrStrided2d(__pyx_t_5utils_11cython_bbox_DTYPE_t *, __pyx_pybuffernd_anchors.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_anchors.diminfo[0].strides, __pyx_t_17, __pyx_pybuffernd_anchors.diminfo[1].strides))); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_15 = PyFloat_FromDouble((*__Pyx_BufPtrStrided2d(__pyx_t_5utils_11cython_bbox_DTYPE_t *, __pyx_pybuffernd_anchors.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_anchors.diminfo[0].strides, __pyx_t_17, __pyx_pybuffernd_anchors.diminfo[1].strides))); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 113, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
-        __pyx_t_1 = PyNumber_Multiply(__pyx_t_2, __pyx_t_15); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_1 = PyNumber_Multiply(__pyx_t_2, __pyx_t_15); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
-        __pyx_t_15 = PyNumber_Multiply(__pyx_t_1, __pyx_float_0_5); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 112, __pyx_L1_error)
+        __pyx_t_15 = PyNumber_Multiply(__pyx_t_1, __pyx_float_0_5); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 113, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_XDECREF_SET(__pyx_v_bw, __pyx_t_15);
         __pyx_t_15 = 0;
 
-        /* "utils/bbox.pyx":113
+        /* "utils/bbox.pyx":114
  *                 bh = bbox_pred[ind, a, 2] * anchors[a, 0] * 0.5
  *                 bw = bbox_pred[ind, a, 3] * anchors[a, 1] * 0.5
  *                 bbox_scale[ind, a, 0] = (cx - bh) / H             # <<<<<<<<<<<<<<
  *                 bbox_scale[ind, a, 1] = (cy - bw) / W
  *                 bbox_scale[ind, a, 2] = (cx + bh) / H
  */
-        __pyx_t_15 = PyNumber_Subtract(__pyx_v_cx, __pyx_v_bh); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 113, __pyx_L1_error)
+        __pyx_t_15 = PyNumber_Subtract(__pyx_v_cx, __pyx_v_bh); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 114, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
-        __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_H); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_H); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 114, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_2 = __Pyx_PyNumber_Divide(__pyx_t_15, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 113, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyNumber_Divide(__pyx_t_15, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __pyx_t_1 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 113, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 114, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_15 = PyTuple_New(3); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 113, __pyx_L1_error)
+        __pyx_t_15 = PyTuple_New(3); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 114, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
         __Pyx_INCREF(__pyx_v_ind);
         __Pyx_GIVEREF(__pyx_v_ind);
@@ -3446,28 +3446,28 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         __Pyx_GIVEREF(__pyx_int_0);
         PyTuple_SET_ITEM(__pyx_t_15, 2, __pyx_int_0);
         __pyx_t_1 = 0;
-        if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_bbox_scale), __pyx_t_15, __pyx_t_2) < 0)) __PYX_ERR(0, 113, __pyx_L1_error)
+        if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_bbox_scale), __pyx_t_15, __pyx_t_2) < 0)) __PYX_ERR(0, 114, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-        /* "utils/bbox.pyx":114
+        /* "utils/bbox.pyx":115
  *                 bw = bbox_pred[ind, a, 3] * anchors[a, 1] * 0.5
  *                 bbox_scale[ind, a, 0] = (cx - bh) / H
  *                 bbox_scale[ind, a, 1] = (cy - bw) / W             # <<<<<<<<<<<<<<
  *                 bbox_scale[ind, a, 2] = (cx + bh) / H
  *                 bbox_scale[ind, a, 3] = (cy + bw) / W
  */
-        __pyx_t_2 = PyNumber_Subtract(__pyx_v_cy, __pyx_v_bw); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __pyx_t_2 = PyNumber_Subtract(__pyx_v_cy, __pyx_v_bw); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 115, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_15 = __Pyx_PyInt_From_int(__pyx_v_W); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __pyx_t_15 = __Pyx_PyInt_From_int(__pyx_v_W); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 115, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
-        __pyx_t_1 = __Pyx_PyNumber_Divide(__pyx_t_2, __pyx_t_15); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyNumber_Divide(__pyx_t_2, __pyx_t_15); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 115, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
-        __pyx_t_15 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __pyx_t_15 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 115, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
-        __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __pyx_t_2 = PyTuple_New(3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 115, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_INCREF(__pyx_v_ind);
         __Pyx_GIVEREF(__pyx_v_ind);
@@ -3478,28 +3478,28 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         __Pyx_GIVEREF(__pyx_int_1);
         PyTuple_SET_ITEM(__pyx_t_2, 2, __pyx_int_1);
         __pyx_t_15 = 0;
-        if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_bbox_scale), __pyx_t_2, __pyx_t_1) < 0)) __PYX_ERR(0, 114, __pyx_L1_error)
+        if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_bbox_scale), __pyx_t_2, __pyx_t_1) < 0)) __PYX_ERR(0, 115, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-        /* "utils/bbox.pyx":115
+        /* "utils/bbox.pyx":116
  *                 bbox_scale[ind, a, 0] = (cx - bh) / H
  *                 bbox_scale[ind, a, 1] = (cy - bw) / W
  *                 bbox_scale[ind, a, 2] = (cx + bh) / H             # <<<<<<<<<<<<<<
  *                 bbox_scale[ind, a, 3] = (cy + bw) / W
- *     return bbox_scale
+ * 
  */
-        __pyx_t_1 = PyNumber_Add(__pyx_v_cx, __pyx_v_bh); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 115, __pyx_L1_error)
+        __pyx_t_1 = PyNumber_Add(__pyx_v_cx, __pyx_v_bh); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_H); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 115, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_H); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 116, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_15 = __Pyx_PyNumber_Divide(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 115, __pyx_L1_error)
+        __pyx_t_15 = __Pyx_PyNumber_Divide(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 116, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-        __pyx_t_2 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 115, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 116, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 115, __pyx_L1_error)
+        __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_INCREF(__pyx_v_ind);
         __Pyx_GIVEREF(__pyx_v_ind);
@@ -3510,27 +3510,28 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         __Pyx_GIVEREF(__pyx_int_2);
         PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_int_2);
         __pyx_t_2 = 0;
-        if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_bbox_scale), __pyx_t_1, __pyx_t_15) < 0)) __PYX_ERR(0, 115, __pyx_L1_error)
+        if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_bbox_scale), __pyx_t_1, __pyx_t_15) < 0)) __PYX_ERR(0, 116, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
 
-        /* "utils/bbox.pyx":116
+        /* "utils/bbox.pyx":117
  *                 bbox_scale[ind, a, 1] = (cy - bw) / W
  *                 bbox_scale[ind, a, 2] = (cx + bh) / H
  *                 bbox_scale[ind, a, 3] = (cy + bw) / W             # <<<<<<<<<<<<<<
+ * 
  *     return bbox_scale
  */
-        __pyx_t_15 = PyNumber_Add(__pyx_v_cy, __pyx_v_bw); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 116, __pyx_L1_error)
+        __pyx_t_15 = PyNumber_Add(__pyx_v_cy, __pyx_v_bw); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 117, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
-        __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_W); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_W); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 117, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_2 = __Pyx_PyNumber_Divide(__pyx_t_15, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 116, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyNumber_Divide(__pyx_t_15, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 117, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __pyx_t_1 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 116, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyInt_From_unsigned_int(__pyx_v_a); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 117, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_15 = PyTuple_New(3); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 116, __pyx_L1_error)
+        __pyx_t_15 = PyTuple_New(3); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 117, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_15);
         __Pyx_INCREF(__pyx_v_ind);
         __Pyx_GIVEREF(__pyx_v_ind);
@@ -3541,13 +3542,13 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
         __Pyx_GIVEREF(__pyx_int_3);
         PyTuple_SET_ITEM(__pyx_t_15, 2, __pyx_int_3);
         __pyx_t_1 = 0;
-        if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_bbox_scale), __pyx_t_15, __pyx_t_2) < 0)) __PYX_ERR(0, 116, __pyx_L1_error)
+        if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_bbox_scale), __pyx_t_15, __pyx_t_2) < 0)) __PYX_ERR(0, 117, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       }
 
-      /* "utils/bbox.pyx":106
- *     cdef np.ndarray[DTYPE_t, ndim=3] bbox_scale = np.zeros((H*W, num_anchors, 4), dtype=DTYPE)
+      /* "utils/bbox.pyx":107
+ * 
  *     for row in range(H):
  *         for col in range(W):             # <<<<<<<<<<<<<<
  *             ind = row * W + col
@@ -3556,9 +3557,9 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
     }
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "utils/bbox.pyx":105
- *     cdef unsigned int num_anchors = anchors.shape[0]
+    /* "utils/bbox.pyx":106
  *     cdef np.ndarray[DTYPE_t, ndim=3] bbox_scale = np.zeros((H*W, num_anchors, 4), dtype=DTYPE)
+ * 
  *     for row in range(H):             # <<<<<<<<<<<<<<
  *         for col in range(W):
  *             ind = row * W + col
@@ -3566,9 +3567,9 @@ static PyObject *__pyx_pf_5utils_11cython_bbox_4yolo2bbox(CYTHON_UNUSED PyObject
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "utils/bbox.pyx":117
- *                 bbox_scale[ind, a, 2] = (cx + bh) / H
+  /* "utils/bbox.pyx":119
  *                 bbox_scale[ind, a, 3] = (cy + bw) / W
+ * 
  *     return bbox_scale             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);

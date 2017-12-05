@@ -41,4 +41,5 @@ box_scale = 1
 
 # training configuration
 num_epochs = 50
-learn_rate = 1e-5
+batch_size = 8
+learn_rate = 1e-3
