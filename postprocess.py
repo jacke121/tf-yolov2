@@ -27,7 +27,7 @@ def nms_detections(boxes_pred, scores, nms_thresh):
     return nms(dets, nms_thresh, force_cpu=False)
 
 
-def preprocess(box_pred, iou_pred, cls_pred, im_shape, thresh):
+def postprocess(box_pred, iou_pred, cls_pred, im_shape, thresh):
     # flatten logits' cells with anchors
     box_pred = np.reshape(box_pred, newshape=[-1, 4])
     box_pred[:, 0::2] *= float(im_shape[0])
@@ -64,6 +64,10 @@ def preprocess(box_pred, iou_pred, cls_pred, im_shape, thresh):
     box_pred = clip_boxes(box_pred, im_shape)
 
     return box_pred, cls_inds, scores
+
+
+def evaluate():
+    pass
 
 
 def draw_targets(image, box_pred, cls_inds, scores):

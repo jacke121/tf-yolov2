@@ -77,7 +77,7 @@ def compute_targets(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes, ancho
 
     # transform and scale bbox_pred to inp_size
     bbox_np = yolo2bbox(
-        np.ascontiguousarray(bbox_pred_np, dtype=np.float),
+        np.ascontiguousarray(bbox_pred_np[np.newaxis], dtype=np.float),
         np.ascontiguousarray(anchors, dtype=np.float), h, w)
     bbox_np = np.reshape(bbox_np, newshape=[-1, 4]) * cfg.inp_size
 
@@ -201,9 +201,9 @@ class Network:
         self.optimizer = tf.train.AdamOptimizer(learning_rate=cfg.learn_rate).minimize(
             loss=self.total_loss, global_step=self.global_step)
 
-        # network's predictions in shape [hw, num_anchors, :]
+        # network's predictions in shape [#im, hw, num_anchors, :]
         self.box_pred = tf.py_func(yolo2bbox,  # scale bbox_pred to 0~1
-                                   [bbox_pred[0], self.anchors_ph,
+                                   [bbox_pred, self.anchors_ph,
                                     logits_h, logits_w],
                                    tf.float32, name='box_pred')
 
@@ -226,10 +226,6 @@ class Network:
             # restore pretrained models (slim)
             raise Exception('failed failed failed')
 
-    def compute_map(self):
-        # compute mAP for evaluating network
-        pass
-
     def train(self, batch_images, batch_boxes, batch_classes, anchors):
         global_step, total_loss, _ = self.sess.run(
             [self.global_step, self.total_loss, self.optimizer],
@@ -245,11 +241,10 @@ class Network:
                         global_step=self.global_step)
         print('saved checkpoint')
 
-    def predict(self, scaled_image):
-        # only 1 image must be scaled in inp_size
+    def predict(self, scaled_images):
         box_pred, iou_pred, cls_pred = self.sess.run(
             [self.box_pred, self.iou_pred, self.cls_pred],
-            feed_dict={self.images_ph: scaled_image[np.newaxis]})
+            feed_dict={self.images_ph: scaled_images})
 
         return box_pred, iou_pred, cls_pred
 
