@@ -167,12 +167,13 @@ class Network:
         self.anchors_ph = tf.placeholder(
             tf.float32, shape=[cfg.num_anchors, 2])
 
-        logits = forward(self.images_ph, num_outputs=cfg.num_anchors *
-                         (cfg.num_classes + 5), scope='yolo')
-        bsize, logits_h, logits_w, _ = logits.get_shape().as_list()
+        logits = forward(self.images_ph,
+                         num_outputs=cfg.num_anchors * (cfg.num_classes + 5),
+                         scope='vgg_16')
+        logits_h, logits_w = logits.get_shape().as_list()[1:3]
         # flatten logits' cells
-        logits = tf.reshape(
-            logits, shape=[bsize, logits_h * logits_w, cfg.num_anchors, cfg.num_classes + 5])
+        logits = tf.reshape(logits,
+                            shape=[-1, logits_h * logits_w, cfg.num_anchors, cfg.num_classes + 5])
 
         # compute targets
         bbox_pred = tf.concat(
@@ -215,9 +216,9 @@ class Network:
         # network ckpt saver
         self.saver = tf.train.Saver()
 
-        self.load_checkpoint(pretrained)
+        self.load_ckpt(pretrained)
 
-    def load_checkpoint(self, pretrained=False):
+    def load_ckpt(self, pretrained=False):
         # restore model with ckpt/pretrain or init
         try:
             print('trying to restore last checkpoint')
@@ -226,11 +227,37 @@ class Network:
             self.saver.restore(self.sess, save_path=last_ckpt_path)
             print('restored checkpoint from:', last_ckpt_path)
         except:
-            print('init variables instead of restoring')
+            print('init variables')
+            restored_vars = []
+            global_vars = tf.global_variables()
+
             if pretrained:  # restore from tf slim vgg16 model
-                pass
-            else:  # randomly init
-                self.sess.run(tf.global_variables_initializer())
+                vgg_16_ckpt = os.path.join(cfg.workspace, 'model/vgg_16.ckpt')
+                if os.path.exists(vgg_16_ckpt):
+                    print('from model/vgg_16.ckpt')
+                    
+                    import re
+                    from tensorflow.python.pywrap_tensorflow import NewCheckpointReader
+
+                    reader = NewCheckpointReader(vgg_16_ckpt)
+                    restored_var_names = sorted([name + ':0'
+                                                 for name in reader.get_variable_to_dtype_map().keys()
+                                                 if re.match('^.*conv.*weights$', name)])
+
+                    # update restored variables from pretrained vgg16 model
+                    restored_vars = [var for var in global_vars
+                                     if var.name in restored_var_names]
+
+                    # restored_vars and names must be same length and order
+                    assert len(restored_vars) == len(restored_var_names)
+
+                    value_ph = tf.placeholder(tf.float32, shape=None)
+                    for i in range(len(restored_var_names)):
+                        self.sess.run(tf.assign(restored_vars[i], value_ph),
+                                      feed_dict={value_ph: reader.get_tensor(restored_var_names[i][:-2])})
+
+            initialized_vars = list(set(global_vars) - set(restored_vars))
+            self.sess.run(tf.variables_initializer(initialized_vars))
 
     def train(self, batch_images, batch_boxes, batch_classes, anchors):
         global_step, total_loss, _ = self.sess.run(
@@ -257,4 +284,4 @@ class Network:
 
 
 if __name__ == '__main__':
-    Network(tf.Session())
+    Network(tf.Session(), pretrained=True)
