@@ -9,11 +9,8 @@ model = 'detrac'
 # working directories
 data_dir = '/home/dat/data/detrac'
 
-yolo_dir = os.path.dirname(os.path.abspath(__file__))
-ckpt_dir = os.path.join(yolo_dir, 'ckpt')
-
-save_path = os.path.join(ckpt_dir, model)
-
+workspace = os.path.dirname(os.path.abspath(__file__))
+ckpt_dir = os.path.join(workspace, 'ckpt')
 if not os.path.exists(ckpt_dir):
     os.makedirs(ckpt_dir)
 
@@ -38,8 +35,3 @@ cls_scale = 1
 object_scale = 5
 noobject_scale = 1
 box_scale = 1
-
-# training configuration
-num_epochs = 50
-batch_size = 8
-learn_rate = 1e-3

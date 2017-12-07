@@ -1,4 +1,5 @@
 from __future__ import absolute_import, division, print_function
+import os
 import numpy as np
 import tensorflow as tf
 import config as cfg
@@ -14,7 +15,7 @@ def leaky(features, name=None):
 
 # import network defined in nets
 def forward(inputs, num_outputs, scope=None):  # define network architecture in here
-    # network forwarding
+    # network forwarding, using vgg16 pretrained model (from tf slim) with duplicated first layer
     with tf.variable_scope(scope, 'net', [inputs], reuse=tf.AUTO_REUSE):
         with slim.arg_scope([slim.conv2d],
                             activation_fn=tf.nn.relu,
@@ -24,37 +25,33 @@ def forward(inputs, num_outputs, scope=None):  # define network architecture in 
                             weights_regularizer=slim.l2_regularizer(5e-4),
                             biases_initializer=tf.zeros_initializer()):
             # use conv_s2 instead of max_pool2d, 12 convolution layers + 1 pooling layer
-            net = slim.conv2d(
-                inputs, 64, [5, 5], stride=2, scope='conv0')  # 208x208x64
-            net = slim.max_pool2d(net, [2, 2], scope='pool0')
+            # inputs 416x416x3
+            net = slim.repeat(inputs, 2, slim.conv2d,
+                              64, [3, 3], scope='conv1')
+            net = slim.max_pool2d(net, [2, 2], scope='pool1')  # 208x208x64
 
-            net = slim.conv2d(
-                net, 64, [3, 3], stride=1, scope='conv1_0')  # 104x104x64
-            net = slim.conv2d(
-                net, 64, [3, 3], stride=1, scope='conv1_1')  # 104x104x64
+            net = slim.repeat(net, 2, slim.conv2d, 128, [3, 3], scope='conv2')
+            net = slim.max_pool2d(net, [2, 2], scope='pool2')  # 104x104x128
 
-            net = slim.conv2d(
-                net, 128, [3, 3], stride=2, scope='conv2_0')  # 52x52x128
-            net = slim.conv2d(
-                net, 128, [3, 3], stride=1, scope='conv2_1')  # 52x52x128
+            net = slim.repeat(net, 3, slim.conv2d, 256, [3, 3], scope='conv3')
+            net = slim.max_pool2d(net, [2, 2], scope='pool3')  # 52x52x256
 
-            shortcut = slim.conv2d(
-                net, 256, [1, 1], stride=2, scope='shortcut2_3')
-            net = slim.conv2d(
-                net, 256, [3, 3], stride=2, scope='conv3_0')  # 26x26x256
-            net = slim.conv2d(
-                net + shortcut, 256, [3, 3], stride=1, scope='conv3_1')  # 26x26x256
+            net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv4')
+            shortcut = slim.max_pool2d(
+                net, [1, 1], stride=2, scope='shortcut4')
+            net = slim.max_pool2d(net, [2, 2], scope='pool4')  # 26x26x512
 
-            shortcut = slim.conv2d(
-                net, 512, [1, 1], stride=2, scope='shortcut3_4')
-            net = slim.conv2d(
-                net, 512, [3, 3], stride=2, scope='conv4_0')  # 13x13x512
-            net = slim.conv2d(
-                net + shortcut, 512, [3, 3], stride=1, scope='conv4_1')  # 13x13x512
+            net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv5')
+            net = net + shortcut
+            shortcut = slim.max_pool2d(
+                net, [1, 1], stride=2, scope='shortcut5')
+            net = slim.max_pool2d(net, [2, 2], scope='pool5')  # 13x13x512
 
+            net = slim.conv2d(net, 512, [3, 3], scope='conv6')
+            net = net + shortcut
             # reduce features to prediction
             net = slim.conv2d(net, num_outputs, [1, 1], stride=1,
-                              activation_fn=None, normalizer_fn=None, scope='conv5')  # 13x13x45
+                              activation_fn=None, normalizer_fn=None, scope='conv7')  # 13x13x(A*(5+C))
 
     return net
 
@@ -152,7 +149,9 @@ def compute_targets_batch(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes,
 
 
 class Network:
-    def __init__(self, session):
+    def __init__(self, session, lr=1e-3, adamop=False, pretrained=False):
+        self.name = cfg.model
+
         # tf session
         self.sess = session
 
@@ -189,6 +188,7 @@ class Network:
         # network's losses
         self.cls_loss = tf.losses.mean_squared_error(labels=_cls * _cls_mask,
                                                      predictions=self.cls_pred * _cls_mask)
+        # cls_loss softmax_cross_entropy loss?
         self.iou_loss = tf.losses.mean_squared_error(labels=_iou * _iou_mask,
                                                      predictions=self.iou_pred * _iou_mask)
         self.box_loss = tf.losses.mean_squared_error(labels=_box * _box_mask,
@@ -198,8 +198,13 @@ class Network:
         # network's optimizer
         self.global_step = tf.Variable(
             initial_value=0, trainable=False, name='global_step')
-        self.optimizer = tf.train.AdamOptimizer(learning_rate=cfg.learn_rate).minimize(
-            loss=self.total_loss, global_step=self.global_step)
+        # GradientDescentOptimizer better?
+        if adamop:  # using adam optimizer
+            self.optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(
+                loss=self.total_loss, global_step=self.global_step)
+        else:  # using SGD optimizer
+            self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=lr).minimize(
+                loss=self.total_loss, global_step=self.global_step)
 
         # network's predictions in shape [#im, hw, num_anchors, :]
         self.box_pred = tf.py_func(yolo2bbox,  # scale bbox_pred to 0~1
@@ -210,10 +215,10 @@ class Network:
         # network ckpt saver
         self.saver = tf.train.Saver()
 
-        self.load_checkpoint()
+        self.load_checkpoint(pretrained)
 
-    def load_checkpoint(self):
-        # restore/init tf graph
+    def load_checkpoint(self, pretrained=False):
+        # restore model with ckpt/pretrain or init
         try:
             print('trying to restore last checkpoint')
             last_ckpt_path = tf.train.latest_checkpoint(
@@ -222,9 +227,10 @@ class Network:
             print('restored checkpoint from:', last_ckpt_path)
         except:
             print('init variables instead of restoring')
-            self.sess.run(tf.global_variables_initializer())
-            # restore pretrained models (slim)
-            raise Exception('failed failed failed')
+            if pretrained:  # restore from tf slim vgg16 model
+                pass
+            else:  # randomly init
+                self.sess.run(tf.global_variables_initializer())
 
     def train(self, batch_images, batch_boxes, batch_classes, anchors):
         global_step, total_loss, _ = self.sess.run(
@@ -236,15 +242,16 @@ class Network:
 
         return global_step, total_loss
 
-    def save(self):
-        self.saver.save(sess=self.sess, save_path=cfg.save_path,
+    def save_ckpt(self):
+        self.saver.save(sess=self.sess, save_path=os.path.join(cfg.ckpt_dir, self.name),
                         global_step=self.global_step)
         print('saved checkpoint')
 
-    def predict(self, scaled_images):
+    def predict(self, scaled_images, anchors):
         box_pred, iou_pred, cls_pred = self.sess.run(
             [self.box_pred, self.iou_pred, self.cls_pred],
-            feed_dict={self.images_ph: scaled_images})
+            feed_dict={self.images_ph: scaled_images,
+                       self.anchors_ph: anchors})
 
         return box_pred, iou_pred, cls_pred
 

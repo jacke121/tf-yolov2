@@ -1,3 +1,4 @@
+# https://github.com/tensorflow/models/blob/master/research/slim/nets/vgg.py
 from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 

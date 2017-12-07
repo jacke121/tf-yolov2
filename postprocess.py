@@ -66,10 +66,6 @@ def postprocess(box_pred, iou_pred, cls_pred, im_shape, thresh):
     return box_pred, cls_inds, scores
 
 
-def evaluate():
-    pass
-
-
 def draw_targets(image, box_pred, cls_inds, scores):
     for b in range(box_pred.shape[0]):
         box_cls = cls_inds[b]

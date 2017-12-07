@@ -1,3 +1,4 @@
+# https://github.com/tensorflow/models/blob/master/research/slim/nets/resnet_v2.py
 from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 from resnet_utils import resnet_block
