@@ -67,11 +67,11 @@ class BlobLoader:
                 batch_boxes.append(boxes)
                 batch_classes.append(classes)
 
-            self.start_idx = 0 if end_idx == self.num_anno else end_idx
+            self.start_idx = end_idx if end_idx < self.num_anno else 0
 
             batch_images = np.asarray(batch_images, dtype=np.float32)
             batch_boxes = np.asarray(batch_boxes, dtype=np.float32)
-            batch_classes = np.asarray(batch_classes, dtype=np.int8)
+            batch_classes = np.asarray(batch_classes, dtype=np.uint8)
 
             yield batch_images, batch_boxes, batch_classes
 

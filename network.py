@@ -235,7 +235,7 @@ class Network:
                 vgg_16_ckpt = os.path.join(cfg.workspace, 'model/vgg_16.ckpt')
                 if os.path.exists(vgg_16_ckpt):
                     print('from model/vgg_16.ckpt')
-                    
+
                     import re
                     from tensorflow.python.pywrap_tensorflow import NewCheckpointReader
 
@@ -248,8 +248,8 @@ class Network:
                     restored_vars = [var for var in global_vars
                                      if var.name in restored_var_names]
 
-                    # restored_vars and names must be same length and order
-                    assert len(restored_vars) == len(restored_var_names)
+                    restored_var_names = [var.name[:-2]
+                                          for var in restored_vars]
 
                     value_ph = tf.placeholder(tf.float32, shape=None)
                     for i in range(len(restored_var_names)):
