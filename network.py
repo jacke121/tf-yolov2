@@ -254,7 +254,7 @@ class Network:
                     value_ph = tf.placeholder(tf.float32, shape=None)
                     for i in range(len(restored_var_names)):
                         self.sess.run(tf.assign(restored_vars[i], value_ph),
-                                      feed_dict={value_ph: reader.get_tensor(restored_var_names[i][:-2])})
+                                      feed_dict={value_ph: reader.get_tensor(restored_var_names[i])})
 
             initialized_vars = list(set(global_vars) - set(restored_vars))
             self.sess.run(tf.variables_initializer(initialized_vars))
