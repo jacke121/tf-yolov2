@@ -15,7 +15,7 @@ def leaky(features, name=None):
 
 # import network defined in nets
 def forward(inputs, num_outputs, scope=None):  # define network architecture in here
-    # network forwarding, using vgg16 pretrained model (from tf slim) with duplicated first layer
+    # network forwarding, using vgg16 pretrained model (from tf slim)
     with tf.variable_scope(scope, 'net', [inputs], reuse=tf.AUTO_REUSE):
         with slim.arg_scope([slim.conv2d],
                             activation_fn=tf.nn.relu,
@@ -24,7 +24,6 @@ def forward(inputs, num_outputs, scope=None):  # define network architecture in 
                                 stddev=0.01),
                             weights_regularizer=slim.l2_regularizer(5e-4),
                             biases_initializer=tf.zeros_initializer()):
-            # use conv_s2 instead of max_pool2d, 12 convolution layers + 1 pooling layer
             # inputs 416x416x3
             net = slim.repeat(inputs, 2, slim.conv2d,
                               64, [3, 3], scope='conv1')
@@ -51,7 +50,7 @@ def forward(inputs, num_outputs, scope=None):  # define network architecture in 
             net = net + shortcut
             # reduce features to prediction
             net = slim.conv2d(net, num_outputs, [1, 1], stride=1,
-                              activation_fn=None, normalizer_fn=None, scope='conv7')  # 13x13x(A*(5+C))
+                              activation_fn=None, normalizer_fn=None, scope='logits')  # 13x13x(A*(5+C))
 
     return net
 
@@ -149,7 +148,8 @@ def compute_targets_batch(h, w, bbox_pred_np, iou_pred_np, gt_boxes, gt_classes,
 
 
 class Network:
-    def __init__(self, session, lr=1e-3, adamop=False, pretrained=False):
+    def __init__(self, session, lr=1e-3, adamop=False,
+                 pretrained=False, focal_losses=False):
         self.name = cfg.model
 
         # tf session
@@ -186,14 +186,19 @@ class Network:
                                                                         self.boxes_ph, self.classes_ph, self.anchors_ph],
                                                                        [tf.float32] * 6, name='targets')
 
-        # network's losses
-        self.cls_loss = tf.losses.mean_squared_error(labels=_cls * _cls_mask,
-                                                     predictions=self.cls_pred * _cls_mask)
-        # cls_loss softmax_cross_entropy loss?
-        self.iou_loss = tf.losses.mean_squared_error(labels=_iou * _iou_mask,
-                                                     predictions=self.iou_pred * _iou_mask)
-        self.box_loss = tf.losses.mean_squared_error(labels=_box * _box_mask,
-                                                     predictions=bbox_pred * _box_mask)
+        if focal_losses:
+            # using focal losses for unbalanced bounding boxes (proposals)
+            pass
+        else:  # using default losses
+            # network's losses
+            self.cls_loss = tf.losses.mean_squared_error(labels=_cls * _cls_mask,
+                                                         predictions=self.cls_pred * _cls_mask)
+            # cls_loss softmax_cross_entropy loss?
+            self.iou_loss = tf.losses.mean_squared_error(labels=_iou * _iou_mask,
+                                                         predictions=self.iou_pred * _iou_mask)
+            self.box_loss = tf.losses.mean_squared_error(labels=_box * _box_mask,
+                                                         predictions=bbox_pred * _box_mask)
+
         self.total_loss = self.cls_loss + self.iou_loss + self.box_loss
 
         # network's optimizer
@@ -240,9 +245,9 @@ class Network:
                     from tensorflow.python.pywrap_tensorflow import NewCheckpointReader
 
                     reader = NewCheckpointReader(vgg_16_ckpt)
-                    restored_var_names = sorted([name + ':0'
-                                                 for name in reader.get_variable_to_dtype_map().keys()
-                                                 if re.match('^.*conv.*weights$', name)])
+                    restored_var_names = [name + ':0'
+                                          for name in reader.get_variable_to_dtype_map().keys()
+                                          if re.match('^.*conv.*weights$', name)]
 
                     # update restored variables from pretrained vgg16 model
                     restored_vars = [var for var in global_vars
