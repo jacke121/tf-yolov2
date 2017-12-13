@@ -69,11 +69,33 @@ class BlobLoader:
 
             self.start_idx = end_idx if end_idx < self.num_anno else 0
 
-            yield batch_images, batch_boxes, batch_classes
+            batch_images = np.asarray(batch_images, dtype=np.float32)
 
+            # add padding, list np.ndarray -> tf.tensor
+            num_images = batch_images.shape[0]
+            max_boxes_im = max([len(clss) for clss in batch_classes])
+            num_boxes_batch = sum([len(clss) for clss in batch_classes])
+
+            batch_boxes_pad = np.zeros(
+                (num_images, max_boxes_im, 4), dtype=np.float32)
+            batch_classes_pad = np.full(
+                (num_images, max_boxes_im), -1, dtype=np.int8)  # -1 mean dontcare
+
+            for i in range(num_images):
+                num_boxes_im = len(batch_classes[i])
+                batch_boxes_pad[i, 0:num_boxes_im, :] = batch_boxes[i]
+                batch_classes_pad[i, 0:num_boxes_im] = batch_classes[i]
+
+            yield batch_images, batch_boxes_pad, batch_classes_pad, num_boxes_batch
+
+            # delete whatever yielded
             del batch_images
             del batch_boxes
+            del batch_boxes_pad
             del batch_classes
+            del batch_classes_pad
+            del num_boxes_batch
+
             batch_images = []
             batch_boxes = []
             batch_classes = []

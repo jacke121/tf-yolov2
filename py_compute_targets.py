@@ -4,7 +4,12 @@ import config as cfg
 from utils.cython_bbox import yolo2bbox, bbox_overlaps, anchor_overlaps
 
 
-def compute_targets(h, w, bbox_pred, iou_pred, gt_boxes, gt_classes, anchors):
+def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
+    # remove dontcare boxes (cls -1) from groundtruth
+    box_inds = np.where(gt_classes >= 0)[0]
+    gt_boxes = gt_boxes[box_inds]
+    gt_classes = gt_classes[box_inds]
+
     hw, num_anchors = bbox_pred.shape[0:2]
 
     _cls = np.zeros((hw, num_anchors, cfg.num_classes), dtype=np.float32)
@@ -14,8 +19,7 @@ def compute_targets(h, w, bbox_pred, iou_pred, gt_boxes, gt_classes, anchors):
     _bbox = np.zeros((hw, num_anchors, 4), dtype=np.float32)
     _bbox_mask = np.zeros((hw, num_anchors, 1), dtype=np.float32)
 
-    # scale bbox_pred to inp_size
-    box_pred = yolo2bbox(bbox_pred, anchors, h, w)
+    # scale box_pred to inp_size
     box_pred = np.reshape(box_pred, [-1, 4]) * cfg.inp_size
 
     box_ious = bbox_overlaps(np.ascontiguousarray(box_pred, dtype=np.float),
@@ -70,8 +74,11 @@ def compute_targets(h, w, bbox_pred, iou_pred, gt_boxes, gt_classes, anchors):
 
 
 def compute_targets_batch(h, w, bbox_pred, iou_pred, gt_boxes, gt_classes, anchors):
-    targets = [compute_targets(h, w, bbox_pred[b], iou_pred[b], gt_boxes[b],
-                               gt_classes[b], anchors) for b in range(bbox_pred.shape[0])]
+    # bbox_pred transform_inv to out_size scale
+    box_pred = yolo2bbox(bbox_pred, anchors, h, w)
+
+    targets = [compute_targets(h, w, box_pred[b], iou_pred[b], gt_boxes[b],
+                               gt_classes[b], anchors) for b in range(box_pred.shape[0])]
 
     _cls = np.stack(target[0] for target in targets)
     _cls_mask = np.stack(target[1] for target in targets)
