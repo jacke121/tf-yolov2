@@ -26,6 +26,9 @@ tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.9
 tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
 # losses
+num_boxes_ph = tf.placeholder(tf.float32)
+
+# focal loss?
 cls_label_ph = tf.placeholder(tf.float32)
 cls_pred_ph = tf.placeholder(tf.float32)
 cls_loss = tf.losses.mean_squared_error(cls_label_ph, cls_pred_ph)
@@ -38,7 +41,7 @@ bbox_label_ph = tf.placeholder(tf.float32)
 bbox_pred_ph = tf.placeholder(tf.float32)
 bbox_loss = tf.losses.mean_squared_error(bbox_label_ph, bbox_pred_ph)
 
-total_loss = cls_loss + iou_loss + bbox_loss
+total_loss = (cls_loss + iou_loss + bbox_loss) / num_boxes_ph
 
 global_step = tf.Variable(initial_value=0, trainable=False, name='global_step')
 optimizer = tf.train.AdamOptimizer(learning_rate=args.lr).minimize(
@@ -57,6 +60,8 @@ for epoch in range(1, args.epochs + 1):
     for _ in range(blob.num_anno // args.batch + 1):
         batch_images, batch_boxes, batch_classes = blob.next_batch()
 
+        num_boxes = sum([boxes.shape[0] for boxes in batch_boxes])
+
         bbox_pred, iou_pred, cls_pred = net.run(images=batch_images)
 
         _cls, _cls_mask, _iou, _iou_mask, _bbox, _bbox_mask = compute_targets_batch(net.out_h, net.out_w,
@@ -64,7 +69,8 @@ for epoch in range(1, args.epochs + 1):
                                                                                     batch_boxes, batch_classes, anchors)
 
         step, loss, _ = net.sess.run([global_step, total_loss, optimizer],
-                                     feed_dict={cls_label_ph: _cls * _cls_mask,
+                                     feed_dict={num_boxes_ph: num_boxes,
+                                                cls_label_ph: _cls * _cls_mask,
                                                 cls_pred_ph: cls_pred * _cls_mask,
                                                 iou_label_ph: _iou * _iou_mask,
                                                 iou_pred_ph: iou_pred * _iou_mask,
