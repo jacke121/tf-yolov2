@@ -29,7 +29,7 @@ for label in label_names:
     label_colors[label] = (np.random.randint(
         0, 128), np.random.randint(0, 128), np.random.randint(0, 128))
 
-# yolo configuration
+# configuration
 iou_thresh = 0.7
 cls_scale = 1
 object_scale = 5

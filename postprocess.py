@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 import config as cfg
 from nms_wrapper import nms
+from utils.cython_bbox import yolo2bbox
 
 
 def clip_boxes(boxes, im_shape):
@@ -27,8 +28,9 @@ def nms_detections(boxes_pred, scores, nms_thresh):
     return nms(dets, nms_thresh, force_cpu=False)
 
 
-def postprocess(box_pred, iou_pred, cls_pred, im_shape, thresh):
+def postprocess(bbox_pred, iou_pred, cls_pred, im_shape, thresh):
     # flatten logits' cells with anchors
+    box_pred = yolo2bbox(bbox_pred, anchors, h, w)
     box_pred = np.reshape(box_pred, newshape=[-1, 4])
     box_pred[:, 0::2] *= float(im_shape[0])
     box_pred[:, 1::2] *= float(im_shape[1])

@@ -11,9 +11,9 @@ for idx, label in enumerate(cfg.label_names):
 
 
 def prep_image(anno_dir, xml):
-    # images in shape of [height, width, num_channels]
-    # bboxes in shape of [num_gt_boxes, (xmin, ymin, xmax, ymax)], scaled in cfg.inp_size
-    # bclasses in shape of [num_gt_boxes, (cls)]
+    # image in shape of [height, width, num_channels]
+    # boxes in shape of [num_gt_boxes, (xmin, ymin, xmax, ymax)], scaled in cfg.inp_size
+    # classes in shape of [num_gt_boxes, (cls)]
     root = ctree.parse(os.path.join(anno_dir, xml)).getroot()
     image_name = root.find('filename').text
     image_size = root.find('size')
@@ -32,10 +32,10 @@ def prep_image(anno_dir, xml):
 
     # scale box coords to target size
     boxes = np.array(boxes, dtype=np.float32) * float(cfg.inp_size)
-    boxes[0::2] /= image_height
-    boxes[1::2] /= image_width
+    boxes[:, 0::2] /= image_height
+    boxes[:, 1::2] /= image_width
 
-    classes = np.array(classes, dtype=np.float32)
+    classes = np.array(classes, dtype=np.uint8)
 
     image = cv2.imread(os.path.join(cfg.data_dir, 'images', image_name))
     image = cv2.resize(image, (cfg.inp_size, cfg.inp_size)) / 255.0
@@ -68,10 +68,6 @@ class BlobLoader:
                 batch_classes.append(classes)
 
             self.start_idx = end_idx if end_idx < self.num_anno else 0
-
-            batch_images = np.asarray(batch_images, dtype=np.float32)
-            batch_boxes = np.asarray(batch_boxes, dtype=np.float32)
-            batch_classes = np.asarray(batch_classes, dtype=np.uint8)
 
             yield batch_images, batch_boxes, batch_classes
 
