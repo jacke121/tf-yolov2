@@ -30,7 +30,7 @@ net = Network(session=tf.Session(config=tfcfg), is_training=True,
 print('loading anchors and dataset')
 anchors = get_anchors(target_size=(cfg.inp_size, cfg.inp_size))
 blob = BlobLoader(anno_dir=train_anno_dir, batch_size=args.batch)
-print('done')
+print('start training')
 
 num_iters = blob.num_anno // args.batch
 step = 0
@@ -44,8 +44,8 @@ for epoch in range(1, args.epochs + 1):
         step, loss = net.train(batch_images, batch_boxes,
                                batch_classes, anchors, num_boxes_batch)
 
-        if step % 5000 == 0 or iter == num_iters:
-            print('step: {0:06} - total loss: {1:.6f}'.format(step, loss))
+        if step % 1 == 0 or iter == num_iters:
+            print('step: {0:06} - total loss: {1}'.format(step, loss))
 
     if epoch % 10 == 0 or epoch == args.epochs:
         net.save_ckpt(step)

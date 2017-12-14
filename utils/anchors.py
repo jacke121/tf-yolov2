@@ -10,6 +10,5 @@ def get_anchors(target_size):
     if target_size == (416, 416):
         return default_anchors
 
-    # assert max(target_size) < 480
     target_scale = np.array(target_size, dtype=np.float32) / 416.
     return np.round(default_anchors * target_scale, 2)

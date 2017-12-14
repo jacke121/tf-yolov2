@@ -9,10 +9,10 @@ cimport cython
 import numpy as np
 cimport numpy as np
 
-DTYPE = np.float
-ctypedef np.float_t DTYPE_t
+DTYPE = np.float32
+ctypedef np.float32_t DTYPE_t
 
-def bbox_overlaps(
+def box_overlaps(
         np.ndarray[DTYPE_t, ndim=2] boxes,
         np.ndarray[DTYPE_t, ndim=2] query_boxes):
     """
@@ -86,7 +86,7 @@ def anchor_overlaps(
             overlaps[n, k] = inter_area / (anchor_area + boxh * boxw - inter_area)
     return overlaps
 
-def yolo2bbox(  # similar to bbox_transform_inv of faster-rcnn
+def bbox_transform(  # similar to bbox_transform_inv of faster-rcnn
         np.ndarray[DTYPE_t, ndim=4] bbox_pred,
         np.ndarray[DTYPE_t, ndim=2] anchors, 
         int H, int W):
@@ -98,11 +98,11 @@ def yolo2bbox(  # similar to bbox_transform_inv of faster-rcnn
     H, W: height, width of features map
     Returns
     -------
-    bbox_scale: 4-dim float ndarray [bsize, HxW, num_anchors, 4] of bbox (x1, y1, x2, y2) rescaled to (0, 1)
+    box_pred: 4-dim float ndarray [bsize, HxW, num_anchors, 4] of bbox (x1, y1, x2, y2) rescaled to (0, 1)
     """
     cdef unsigned int bsize = bbox_pred.shape[0]
     cdef unsigned int num_anchors = anchors.shape[0]
-    cdef np.ndarray[DTYPE_t, ndim=4] bbox_scale = np.zeros((bsize, H*W, num_anchors, 4), dtype=DTYPE)
+    cdef np.ndarray[DTYPE_t, ndim=4] box_pred = np.zeros((bsize, H*W, num_anchors, 4), dtype=DTYPE)
     
     for b in range(bsize):
         for row in range(H):
@@ -113,9 +113,9 @@ def yolo2bbox(  # similar to bbox_transform_inv of faster-rcnn
                     cy = col + bbox_pred[b, ind, a, 1]
                     bh = bbox_pred[b, ind, a, 2] * anchors[a, 0] * 0.5
                     bw = bbox_pred[b, ind, a, 3] * anchors[a, 1] * 0.5
-                    bbox_scale[b, ind, a, 0] = (cx - bh) / H
-                    bbox_scale[b, ind, a, 1] = (cy - bw) / W
-                    bbox_scale[b, ind, a, 2] = (cx + bh) / H
-                    bbox_scale[b, ind, a, 3] = (cy + bw) / W
+                    box_pred[b, ind, a, 0] = (cx - bh) / H
+                    box_pred[b, ind, a, 1] = (cy - bw) / W
+                    box_pred[b, ind, a, 2] = (cx + bh) / H
+                    box_pred[b, ind, a, 3] = (cy + bw) / W
 
-    return bbox_scale
+    return box_pred

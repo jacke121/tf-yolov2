@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import config as cfg
-from utils.cython_bbox import yolo2bbox, bbox_overlaps, anchor_overlaps
+from utils.cython_bbox import bbox_transform, box_overlaps, anchor_overlaps
 
 
 def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
@@ -10,7 +10,7 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
     gt_boxes = gt_boxes[box_inds]
     gt_classes = gt_classes[box_inds]
 
-    hw, num_anchors = bbox_pred.shape[0:2]
+    hw, num_anchors = box_pred.shape[0:2]
 
     _cls = np.zeros((hw, num_anchors, cfg.num_classes), dtype=np.float32)
     _cls_mask = np.zeros((hw, num_anchors, 1), dtype=np.float32)
@@ -22,8 +22,8 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
     # scale box_pred to inp_size
     box_pred = np.reshape(box_pred, [-1, 4]) * cfg.inp_size
 
-    box_ious = bbox_overlaps(np.ascontiguousarray(box_pred, dtype=np.float),
-                             np.ascontiguousarray(gt_boxes, dtype=np.float))
+    box_ious = box_overlaps(np.ascontiguousarray(box_pred, dtype=np.float32),
+                            np.ascontiguousarray(gt_boxes, dtype=np.float32))
     box_ious = np.reshape(box_ious, [hw, num_anchors, -1])
 
     neg_boxpred_inds = np.max(box_ious, axis=2) <= cfg.iou_thresh
@@ -48,8 +48,8 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
     target_boxes[:, 3] = gt_boxes[:, 3] - gt_boxes[:, 1]
 
     # match gt_boxes and anchors
-    anchor_ious = anchor_overlaps(np.ascontiguousarray(anchors, dtype=np.float),
-                                  np.ascontiguousarray(gt_boxes, dtype=np.float))
+    anchor_ious = anchor_overlaps(np.ascontiguousarray(anchors, dtype=np.float32),
+                                  np.ascontiguousarray(gt_boxes, dtype=np.float32))
     anchor_inds = np.argmax(anchor_ious, axis=0)
 
     for i, cell_ind in enumerate(cell_inds):
@@ -66,7 +66,7 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
         _iou_mask[cell_ind, a, :] = cfg.object_scale * \
             (_iou_truth - iou_pred[cell_ind, a, :])
 
-        target_boxes[i, 2::4] /= anchors[a]
+        target_boxes[i, 2:4] /= anchors[a]
         _bbox[cell_ind, a, :] = target_boxes[i]
         _bbox_mask[cell_ind, a, :] = cfg.box_scale
 
@@ -75,7 +75,7 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
 
 def compute_targets_batch(h, w, bbox_pred, iou_pred, gt_boxes, gt_classes, anchors):
     # bbox_pred transform_inv to out_size scale
-    box_pred = yolo2bbox(bbox_pred, anchors, h, w)
+    box_pred = bbox_transform(bbox_pred, anchors, h, w)
 
     targets = [compute_targets(h, w, box_pred[b], iou_pred[b], gt_boxes[b],
                                gt_classes[b], anchors) for b in range(box_pred.shape[0])]

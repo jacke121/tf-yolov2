@@ -11,6 +11,13 @@ def leaky(features, name=None):
     return tf.nn.leaky_relu(features, alpha=0.1, name=name)
 
 
+def subsample(inputs, factor, scope=None):
+    if factor == 1:
+        return inputs
+    else:
+        return slim.max_pool2d(inputs, [1, 1], stride=factor, scope=scope)
+
+
 # import network defined in nets
 def forward(inputs, num_outputs, scope=None):  # define network architecture in here
     # network forwarding, using vgg16 pretrained model (from tf slim)
@@ -34,7 +41,7 @@ def forward(inputs, num_outputs, scope=None):  # define network architecture in 
             net = slim.max_pool2d(net, [2, 2], scope='pool3')
             # 52x52x256
             net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv4')
-            sc = slim.max_pool2d(net, [1, 1], stride=2, scope='sc4')
+            sc = subsample(net, factor=2, scope='sc4')
             net = slim.max_pool2d(net, [2, 2], scope='pool4')
             # 26x26x512
             net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv5')
