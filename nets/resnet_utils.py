@@ -6,7 +6,7 @@ import tensorflow as tf
 slim = tf.contrib.slim
 
 
-def _subsample(inputs, factor, scope=None):
+def subsample(inputs, factor, scope=None):
     """Subsamples the input along the spatial dimensions.
     Args:
         inputs: A `Tensor` of size [batch, height_in, width_in, channels].
@@ -58,7 +58,7 @@ def conv2d_same(inputs, num_outputs, kernel_size, stride=1, rate=1, scope=None):
         return slim.conv2d(inputs, num_outputs, kernel_size, stride=stride, rate=rate, padding='VALID', scope=scope)
 
 
-def _bottleneck(inputs, depth, depth_bottleneck, stride, scope=None):
+def bottleneck(inputs, depth, depth_bottleneck, stride, scope=None):
     """Bottleneck residual unit variant with BN before convolutions.
     Args:
     inputs: A tensor of size [batch, height, width, channels].
@@ -75,7 +75,7 @@ def _bottleneck(inputs, depth, depth_bottleneck, stride, scope=None):
         preact = slim.batch_norm(
             inputs, activation_fn=tf.nn.relu, scope='preact')
         if depth == depth_in:
-            shortcut = _subsample(inputs, stride, 'shortcut')
+            shortcut = subsample(inputs, stride, 'shortcut')
         else:
             shortcut = slim.conv2d(preact, depth, [1, 1], stride=stride,
                                    normalizer_fn=None, activation_fn=None, scope='shortcut')
@@ -109,7 +109,7 @@ def resnet_block(inputs, base_depth, num_units, stride, scope=None):
     depth = base_depth * 4
 
     with tf.variable_scope(scope, 'block', [inputs]):
-        net = _bottleneck(inputs, depth, base_depth,
+        net = bottleneck(inputs, depth, base_depth,
                           stride=stride)  # first block
 
         net = slim.repeat(net, num_units - 1, _bottleneck,

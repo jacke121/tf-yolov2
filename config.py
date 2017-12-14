@@ -18,7 +18,7 @@ if not os.path.exists(ckpt_dir):
 # target_size = 416
 # max_size = 480
 
-inp_size = 416
+inp_size = 416  # multiscale training on [416, 448, 480]
 num_anchors = 5
 
 # object labels and class colors
