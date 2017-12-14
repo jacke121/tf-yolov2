@@ -126,9 +126,7 @@ class Network:
             self.saver.restore(self.sess, save_path=last_ckpt_path)
             print('restored checkpoint from:', last_ckpt_path)
         except:
-            if not self.is_training:
-                raise Exception('not found checkpoint')
-            else:
+            if self.is_training:
                 print('init variables')
                 restored_vars = []
                 global_vars = tf.global_variables()
@@ -185,3 +183,7 @@ class Network:
                                                       feed_dict={self.images_ph: scaled_images})
 
         return bbox_pred, iou_pred, cls_pred
+
+
+if __name__ == '__main__':
+    Network(tf.Session(), pretrained=True)  # trying to init network

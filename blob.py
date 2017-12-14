@@ -53,12 +53,12 @@ class BlobLoader:
         self.start_idx = 0
 
     def next_batch(self):
-        batch_images = []
-        batch_boxes = []
-        batch_classes = []
+        np.random.shuffle(self.anno)
+
         while True:
-            if self.start_idx == 0:
-                np.random.shuffle(self.anno)
+            batch_images = []
+            batch_boxes = []
+            batch_classes = []
 
             end_idx = min(self.start_idx + self.batch_size, self.num_anno)
             for xml in self.anno[self.start_idx:end_idx]:
@@ -96,6 +96,6 @@ class BlobLoader:
             del batch_classes_pad
             del num_boxes_batch
 
-            batch_images = []
-            batch_boxes = []
-            batch_classes = []
+            # complete epoch
+            if self.start_idx == 0:
+                break
