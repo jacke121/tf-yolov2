@@ -22,13 +22,13 @@ def clip_boxes(boxes, im_shape):
     return boxes
 
 
-def nms_detections(boxes_pred, scores, nms_thresh):
+def nms_detections(boxes_pred, scores, nms_thresh, force_cpu):
     dets = np.hstack((boxes_pred, scores[:, np.newaxis])).astype(np.float32)
 
-    return nms(dets, nms_thresh, force_cpu=False)
+    return nms(dets, nms_thresh, force_cpu)
 
 
-def postprocess(bbox_pred, iou_pred, cls_pred, im_shape, thresh):
+def postprocess(bbox_pred, iou_pred, cls_pred, im_shape, thresh, force_cpu):
     # flatten logits' cells with anchors
     box_pred = bbox_transform(bbox_pred, anchors, h, w)
     box_pred = np.reshape(box_pred, newshape=[-1, 4])
@@ -55,7 +55,7 @@ def postprocess(bbox_pred, iou_pred, cls_pred, im_shape, thresh):
         if len(inds) == 0:
             continue
 
-        keep = nms_detections(boxes_pred[inds], scores[inds], nms_thresh=0.3)
+        keep = nms_detections(boxes_pred[inds], scores[inds], 0.3, force_cpu)
         keep_inds[inds[keep]] = 1
 
     keep_inds = np.where(keep_inds > 0)[0]

@@ -2,5 +2,7 @@
 *.txt
 .vscode/
 __pycache__/
+.ipynb_checkpoints/
+logs/
 ckpt/
 model/

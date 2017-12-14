@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 import os
+import numpy as np
 import tensorflow as tf
 import config as cfg
 from network import Network
@@ -9,13 +10,13 @@ from utils.anchors import get_anchors
 
 slim = tf.contrib.slim
 
-train_anno_dir = os.path.join(cfg.data_dir, 'annotation_test')
+train_anno_dir = os.path.join(cfg.data_dir, 'annotation_val')
 
 # add gpu/cpu options??
 parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', type=int, default=50)
-parser.add_argument('--batch', type=int, default=2)
-parser.add_argument('--lr', type=float, default=1e-3)
+parser.add_argument('--batch', type=int, default=4)
+parser.add_argument('--lr', type=float, default=1e-5)
 args = parser.parse_args()
 
 # tf configuration
@@ -35,6 +36,8 @@ print('start training')
 num_iters = blob.num_anno // args.batch
 step = 0
 
+batch_losses = []
+
 for epoch in range(1, args.epochs + 1):
     iter = 0
 
@@ -44,8 +47,12 @@ for epoch in range(1, args.epochs + 1):
         step, loss = net.train(batch_images, batch_boxes,
                                batch_classes, anchors, num_boxes_batch)
 
-        if step % 1 == 0 or iter == num_iters:
+        if step % 100 == 0 or iter == num_iters:
+            batch_losses.append(loss)
             print('step: {0:06} - total loss: {1}'.format(step, loss))
 
     if epoch % 10 == 0 or epoch == args.epochs:
         net.save_ckpt(step)
+
+batch_losses = np.asarray(batch_losses, dtype=np.float32)
+np.savetxt('./logs/losses_100.txt', batch_losses, fmt='%.3f')

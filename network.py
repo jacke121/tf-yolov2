@@ -27,7 +27,7 @@ def forward(inputs, num_outputs, scope=None):  # define network architecture in 
                             normalizer_fn=slim.batch_norm,
                             weights_initializer=tf.truncated_normal_initializer(
                                 stddev=0.01),
-                            weights_regularizer=slim.l2_regularizer(5e-4),
+                            weights_regularizer=slim.l2_regularizer(1e-4),
                             biases_initializer=tf.zeros_initializer()):
             # 416x416x3
             net = slim.repeat(inputs, 2, slim.conv2d,
@@ -57,22 +57,13 @@ def forward(inputs, num_outputs, scope=None):  # define network architecture in 
 
 
 class Network:
-    def __init__(self, session, is_training=True, lr=1e-3, adamop=False, pretrained=False):
+    def __init__(self, session, is_training=True, lr=1e-5, adamop=False, pretrained=False):
         self.sess = session
         self.is_training = is_training
 
         # network's placeholders
         self.images_ph = tf.placeholder(
             tf.float32, shape=[None, cfg.inp_size, cfg.inp_size, 3])
-
-        self.boxes_ph = tf.placeholder(tf.float32, shape=None)
-
-        self.classes_ph = tf.placeholder(tf.int8, shape=None)
-
-        self.anchors_ph = tf.placeholder(
-            tf.float32, shape=[cfg.num_anchors, 2])
-
-        self.num_gt_boxes_ph = tf.placeholder(tf.float32, shape=None)
 
         # compute targets
         logits = forward(self.images_ph,
@@ -92,6 +83,16 @@ class Network:
         self.cls_pred = tf.nn.softmax(logits[:, :, :, 5:])
 
         if self.is_training:
+            # network's placeholders in training
+            self.boxes_ph = tf.placeholder(tf.float32, shape=None)
+
+            self.classes_ph = tf.placeholder(tf.int8, shape=None)
+
+            self.anchors_ph = tf.placeholder(
+                tf.float32, shape=[cfg.num_anchors, 2])
+
+            self.num_gt_boxes_ph = tf.placeholder(tf.float32, shape=None)
+
             _cls, _cls_mask, _iou, _iou_mask, _bbox, _bbox_mask = tf.py_func(compute_targets_batch,
                                                                              [h, w, self.bbox_pred, self.iou_pred,
                                                                               self.boxes_ph, self.classes_ph, self.anchors_ph],
@@ -126,7 +127,6 @@ class Network:
     def load_ckpt(self, pretrained):
         # restore model with ckpt/pretrain or init
         try:
-            # restore for testing?
             print('trying to restore last checkpoint')
             last_ckpt_path = tf.train.latest_checkpoint(
                 checkpoint_dir=cfg.ckpt_dir)
@@ -184,6 +184,8 @@ class Network:
         self.saver.save(self.sess,
                         save_path=os.path.join(cfg.ckpt_dir, cfg.model),
                         global_step=self.global_step)
+
+        print('saved checkpoint at step {}'.format(step))
 
     def compute(self, scaled_images):
         bbox_pred, iou_pred, cls_pred = self.sess.run([self.bbox_pred, self.iou_pred, self.cls_pred],
