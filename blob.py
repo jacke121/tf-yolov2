@@ -44,6 +44,15 @@ def prep_image(anno_dir, xml):
     return image, boxes, classes
 
 
+def lr_flip(image, boxes):
+    flip_image = cv2.flip(image, 1)
+
+    flip_boxes = np.copy(boxes)
+    flip_boxes[:, 0::2] = image.shape[1] - flip_boxes[:, 0::2]
+
+    return flip_image, flip_boxes
+
+
 class BlobLoader:
     def __init__(self, anno_dir, batch_size=1):
         self.anno_dir = anno_dir
@@ -54,6 +63,7 @@ class BlobLoader:
         self.start_idx = 0
 
     def next_batch(self):
+        # yield 2*batch_size images with left-right flipping
         np.random.shuffle(self.anno)
 
         while True:
@@ -67,6 +77,7 @@ class BlobLoader:
                 batch_images.append(image)
                 batch_boxes.append(boxes)
                 batch_classes.append(classes)
+                # flip_image, flip_boxes = lr_flip(image, boxes)
 
             self.start_idx = end_idx if end_idx < self.num_anno else 0
 

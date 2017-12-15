@@ -55,7 +55,7 @@ def postprocess(box_pred, iou_pred, cls_pred,
         if len(inds) == 0:
             continue
 
-        keep = nms_detections(box_pred[inds], scores[inds], 0.3, force_cpu)
+        keep = nms_detections(box_pred[inds], scores[inds], 0.45, force_cpu)
         keep_inds[inds[keep]] = 1
 
     keep_inds = np.where(keep_inds > 0)[0]

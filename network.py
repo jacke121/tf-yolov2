@@ -17,29 +17,32 @@ def forward(inputs, num_outputs, scope=None):
         with slim.arg_scope([slim.conv2d],
                             activation_fn=tf.nn.relu,
                             normalizer_fn=slim.batch_norm,
-                            weights_initializer=tf.truncated_normal_initializer(
-                                stddev=0.01),
-                            weights_regularizer=slim.l2_regularizer(1e-4),
-                            biases_initializer=tf.zeros_initializer()):
-            net = slim.repeat(inputs, 2, slim.conv2d,
-                              64, [3, 3], scope='conv1')
+                            weights_initializer=tf.contrib.layers.xavier_initializer()):
+            net = slim.repeat(inputs, 2, slim.conv2d, 64,
+                              [3, 3], scope='conv1')
             net = slim.max_pool2d(net, [2, 2], scope='pool1')
 
-            net = slim.repeat(net, 2, slim.conv2d, 128, [3, 3], scope='conv2')
+            net = slim.repeat(net, 2, slim.conv2d, 128,
+                              [3, 3], scope='conv2')
             net = slim.max_pool2d(net, [2, 2], scope='pool2')
 
-            net = slim.repeat(net, 2, slim.conv2d, 256, [3, 3], scope='conv3')
+            net = slim.repeat(net, 2, slim.conv2d, 256,
+                              [3, 3], scope='conv3')
+            sc = slim.conv2d(net, 512, [1, 1], stride=2, scope='sc3')
             net = slim.max_pool2d(net, [2, 2], scope='pool3')
 
-            net = slim.repeat(net, 2, slim.conv2d, 512, [3, 3], scope='conv4')
+            net = slim.repeat(net, 2, slim.conv2d, 512,
+                              [3, 3], scope='conv4') + sc
             sc = slim.max_pool2d(net, [1, 1], stride=2, scope='sc4')
             net = slim.max_pool2d(net, [2, 2], scope='pool4')
 
-            net = slim.repeat(net, 2, slim.conv2d, 512, [3, 3], scope='conv5')
-            net = net + sc
+            net = slim.repeat(net, 2, slim.conv2d, 512,
+                              [3, 3], scope='conv5') + sc
+            sc = slim.max_pool2d(net, [1, 1], stride=2, scope='sc5')
             net = slim.max_pool2d(net, [2, 2], scope='pool5')
 
-            net = slim.conv2d(net, 512, [3, 3], scope='conv6')
+            net = slim.repeat(net, 2, slim.conv2d, 512,
+                              [3, 3], scope='conv6') + sc
             net = slim.conv2d(net, num_outputs, [1, 1], stride=1,
                               activation_fn=None, normalizer_fn=None, scope='logits')
 
@@ -47,7 +50,7 @@ def forward(inputs, num_outputs, scope=None):
 
 
 class Network:
-    def __init__(self, session, is_training=True, lr=1e-5, adamop=False, pretrained=False):
+    def __init__(self, session, is_training=True, lr=1e-3, adamop=False, pretrained=False):
         self.sess = session
         self.is_training = is_training
 
@@ -110,8 +113,8 @@ class Network:
             if adamop:  # using Adam
                 self.optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(
                     loss=self.total_loss, global_step=self.global_step)
-            else:  # using SGD
-                self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=lr).minimize(
+            else:  # using SGD with momentum
+                self.optimizer = tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9).minimize(
                     loss=self.total_loss, global_step=self.global_step)
 
         self.saver = tf.train.Saver(max_to_keep=3)
@@ -181,7 +184,7 @@ class Network:
 
         print('saved checkpoint at step {}'.format(step))
 
-    def compute(self, scaled_images, anchors):
+    def predict(self, scaled_images, anchors):
         box_pred, iou_pred, cls_pred = self.sess.run([self.box_pred, self.iou_pred, self.cls_pred],
                                                      feed_dict={self.images_ph: scaled_images,
                                                                 self.anchors_ph: anchors})

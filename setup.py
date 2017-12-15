@@ -142,6 +142,11 @@ ext_modules = [
                                            '--compiler-options',
                                            "'-fPIC'"]},
               include_dirs=[numpy_include, CUDA['include']]
+              ),
+    Extension('compute_targets',
+              ['compute_targets.pyx'],
+              extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
+              include_dirs=[numpy_include]
               )
 ]
 

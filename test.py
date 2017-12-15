@@ -13,7 +13,8 @@ from utils.anchors import get_anchors
 slim = tf.contrib.slim
 
 tfcfg = tf.ConfigProto()
-tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.8
+tfcfg.gpu_options.allow_growth = True
+tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.6
 tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
 net = Network(session=tf.Session(config=tfcfg), is_training=False)
@@ -24,7 +25,7 @@ anchors = get_anchors(target_size=(cfg.inp_size, cfg.inp_size))
 
 start_t = time.time()
 
-box_pred, iou_pred, cls_pred = net.compute(scaled_image[np.newaxis], anchors)
+box_pred, iou_pred, cls_pred = net.predict(scaled_image[np.newaxis], anchors)
 
 box_pred, cls_inds, scores = postprocess(box_pred[0], iou_pred[0], cls_pred[0],
                                          image.shape[0:2], thresh=0.5, force_cpu=False)

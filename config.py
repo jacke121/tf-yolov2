@@ -14,10 +14,7 @@ ckpt_dir = os.path.join(workspace, 'ckpt')
 if not os.path.exists(ckpt_dir):
     os.makedirs(ckpt_dir)
 
-# target image size for blob
-# target_size = 416
-# max_size = 480
-
+# target_size = (inp_size, inp_size)
 inp_size = 416  # multiscale training on [416, 448, 480]
 num_anchors = 5
 

@@ -13,19 +13,21 @@ slim = tf.contrib.slim
 train_anno_dir = os.path.join(cfg.data_dir, 'annotation_val')
 
 # add gpu/cpu options??
+# 2*batch_size images per batch with left-right flipping
 parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', type=int, default=50)  # num training epochs
 parser.add_argument('--batch', type=int, default=4)  # num images per batch
-parser.add_argument('--lr', type=float, default=1e-5)  # learning rate
+parser.add_argument('--lr', type=float, default=1e-3)  # learning rate
 args = parser.parse_args()
 
 # tf configuration
 tfcfg = tf.ConfigProto()
-tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.8
+tfcfg.gpu_options.allow_growth = True
+tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.6
 tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
 net = Network(session=tf.Session(config=tfcfg), is_training=True,
-              lr=args.lr, adamop=True, pretrained=True)
+              lr=args.lr, adamop=False, pretrained=True)
 
 # load anchors and data
 print('loading anchors and dataset')

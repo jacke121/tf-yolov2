@@ -1,3 +1,4 @@
+# pure python targets regression
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import config as cfg
@@ -29,7 +30,7 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
     neg_boxpred_inds = np.max(box_ious, axis=2) <= cfg.iou_thresh
     _iou_mask[neg_boxpred_inds] = cfg.noobject_scale * \
         (0 - iou_pred[neg_boxpred_inds])
-    
+
     # scale gt_boxes to out_size
     gt_boxes[:, 0::2] *= (h / cfg.inp_size)
     gt_boxes[:, 1::2] *= (w / cfg.inp_size)
@@ -51,7 +52,7 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
     anchor_ious = anchor_overlaps(np.ascontiguousarray(anchors, dtype=np.float32),
                                   np.ascontiguousarray(gt_boxes, dtype=np.float32))
     anchor_inds = np.argmax(anchor_ious, axis=0)
-    
+
     for i, cell_ind in enumerate(cell_inds):
         # for each gt_boxes
         if cell_ind >= hw or cell_ind < 0:
