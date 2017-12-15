@@ -21,7 +21,7 @@ args = parser.parse_args()
 
 # tf configuration
 tfcfg = tf.ConfigProto()
-tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.8
+tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.7
 tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
 net = Network(session=tf.Session(config=tfcfg), is_training=True,
@@ -31,13 +31,10 @@ net = Network(session=tf.Session(config=tfcfg), is_training=True,
 print('loading anchors and dataset')
 anchors = get_anchors(target_size=(cfg.inp_size, cfg.inp_size))
 blob = BlobLoader(anno_dir=train_anno_dir, batch_size=args.batch)
-print('start training')
-
 num_iters = blob.num_anno // args.batch
 step = 0
 
-batch_losses = []
-
+print('start training')
 for epoch in range(1, args.epochs + 1):
     iter = 0
 
@@ -48,11 +45,9 @@ for epoch in range(1, args.epochs + 1):
                                batch_classes, anchors, num_boxes_batch)
 
         if step % 100 == 0 or iter == num_iters:
-            batch_losses.append(loss)
-            print('step: {0:06} - total loss: {1}'.format(step, loss))
+            print('epoch: {0:03} - step: {1:06} - total_loss: {2}'
+                  .format(epoch, step, loss))
 
     if epoch % 10 == 0 or epoch == args.epochs:
         net.save_ckpt(step)
-
-batch_losses = np.asarray(batch_losses, dtype=np.float32)
-np.savetxt('./logs/losses_100.txt', batch_losses, fmt='%.3f')
+print('training done')

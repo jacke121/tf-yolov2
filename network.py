@@ -3,6 +3,7 @@ import os
 import tensorflow as tf
 import config as cfg
 from py_compute_targets import compute_targets_batch
+from utils.cython_bbox import bbox_transform
 
 slim = tf.contrib.slim
 
@@ -27,14 +28,14 @@ def forward(inputs, num_outputs, scope=None):
             net = slim.repeat(net, 2, slim.conv2d, 128, [3, 3], scope='conv2')
             net = slim.max_pool2d(net, [2, 2], scope='pool2')
 
-            net = slim.repeat(net, 3, slim.conv2d, 256, [3, 3], scope='conv3')
+            net = slim.repeat(net, 2, slim.conv2d, 256, [3, 3], scope='conv3')
             net = slim.max_pool2d(net, [2, 2], scope='pool3')
 
-            net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv4')
+            net = slim.repeat(net, 2, slim.conv2d, 512, [3, 3], scope='conv4')
             sc = slim.max_pool2d(net, [1, 1], stride=2, scope='sc4')
             net = slim.max_pool2d(net, [2, 2], scope='pool4')
 
-            net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv5')
+            net = slim.repeat(net, 2, slim.conv2d, 512, [3, 3], scope='conv5')
             net = net + sc
             net = slim.max_pool2d(net, [2, 2], scope='pool5')
 
@@ -62,10 +63,14 @@ class Network:
         h, w = logits.get_shape().as_list()[1:3]
 
         logits = tf.reshape(logits,
-                            [-1, h * w, cfg.num_anchors, cfg.num_classes + 5])
+                            [-1, self.h * self.w, cfg.num_anchors, cfg.num_classes + 5])
 
-        self.bbox_pred = tf.concat([tf.sigmoid(logits[:, :, :, 0:2]), tf.exp(logits[:, :, :, 2:4])],
-                                   axis=3)
+        bbox_pred = tf.concat([tf.sigmoid(logits[:, :, :, 0:2]), tf.exp(logits[:, :, :, 2:4])],
+                              axis=3)
+
+        self.box_pred = tf.py_func(bbox_transform,
+                                   [bbox_pred, self.anchors_ph, h, w],
+                                   [tf.float32], name='box_pred')
 
         self.iou_pred = tf.sigmoid(logits[:, :, :, 4:5])
 
@@ -80,10 +85,10 @@ class Network:
             self.anchors_ph = tf.placeholder(
                 tf.float32, shape=[cfg.num_anchors, 2])
 
-            self.num_gt_boxes_ph = tf.placeholder(tf.float32, shape=None)
+            self.num_boxes_batch_ph = tf.placeholder(tf.float32, shape=None)
 
             _cls, _cls_mask, _iou, _iou_mask, _bbox, _bbox_mask = tf.py_func(compute_targets_batch,
-                                                                             [h, w, self.bbox_pred, self.iou_pred,
+                                                                             [h, w, self.box_pred, self.iou_pred,
                                                                               self.boxes_ph, self.classes_ph, self.anchors_ph],
                                                                              [tf.float32] * 6, name='targets')
 
@@ -96,7 +101,7 @@ class Network:
                                                          predictions=self.cls_pred * _cls_mask)
 
             self.total_loss = (self.bbox_loss + self.iou_loss +
-                               self.cls_loss) / self.num_gt_boxes_ph
+                               self.cls_loss) / self.num_boxes_batch_ph
 
             # network's optimizer
             self.global_step = tf.Variable(
@@ -157,15 +162,15 @@ class Network:
                 initialized_vars = list(set(global_vars) - set(restored_vars))
                 self.sess.run(tf.variables_initializer(initialized_vars))
 
-    def train(self, batch_images, batch_boxes, batch_classes, anchors, num_gt_boxes):
+    def train(self, batch_images, batch_boxes, batch_classes, anchors, num_boxes_batch):
         assert self.is_training
 
-        step, loss, _ = self.sess.run([self.global_step, self.total_loss, self.optimizer],
+        step, _, loss = self.sess.run([self.global_step, self.optimizer, self.total_loss],
                                       feed_dict={self.images_ph: batch_images,
                                                  self.boxes_ph: batch_boxes,
                                                  self.classes_ph: batch_classes,
                                                  self.anchors_ph: anchors,
-                                                 self.num_gt_boxes_ph: num_gt_boxes})
+                                                 self.num_boxes_batch_ph: num_boxes_batch})
 
         return step, loss
 
@@ -177,10 +182,10 @@ class Network:
         print('saved checkpoint at step {}'.format(step))
 
     def compute(self, scaled_images):
-        bbox_pred, iou_pred, cls_pred = self.sess.run([self.bbox_pred, self.iou_pred, self.cls_pred],
-                                                      feed_dict={self.images_ph: scaled_images})
+        box_pred, iou_pred, cls_pred = self.sess.run([self.box_pred, self.iou_pred, self.cls_pred],
+                                                     feed_dict={self.images_ph: scaled_images})
 
-        return bbox_pred, iou_pred, cls_pred
+        return box_pred, iou_pred, cls_pred
 
 
 if __name__ == '__main__':

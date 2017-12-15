@@ -112,7 +112,7 @@ def resnet_block(inputs, base_depth, num_units, stride, scope=None):
         net = bottleneck(inputs, depth, base_depth,
                           stride=stride)  # first block
 
-        net = slim.repeat(net, num_units - 1, _bottleneck,
+        net = slim.repeat(net, num_units - 1, bottleneck,
                           depth, base_depth, stride=1)  # rest blocks
 
     return net

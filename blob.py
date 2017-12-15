@@ -35,10 +35,11 @@ def prep_image(anno_dir, xml):
     boxes[:, 0::2] /= image_height
     boxes[:, 1::2] /= image_width
 
-    classes = np.array(classes, dtype=np.uint8)
+    classes = np.array(classes, dtype=np.int8)
 
     image = cv2.imread(os.path.join(cfg.data_dir, 'images', image_name))
-    image = cv2.resize(image, (cfg.inp_size, cfg.inp_size)) / 255.0
+    image = cv2.resize(image, (cfg.inp_size, cfg.inp_size))
+    image /= 255.0
 
     return image, boxes, classes
 

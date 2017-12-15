@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import config as cfg
-from utils.cython_bbox import bbox_transform, box_overlaps, anchor_overlaps
+from utils.cython_bbox import box_overlaps, anchor_overlaps
 
 
 def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
@@ -73,10 +73,7 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
     return _cls, _cls_mask, _iou, _iou_mask, _bbox, _bbox_mask
 
 
-def compute_targets_batch(h, w, bbox_pred, iou_pred, gt_boxes, gt_classes, anchors):
-    # bbox_pred transform_inv to out_size scale
-    box_pred = bbox_transform(bbox_pred, anchors, h, w)
-
+def compute_targets_batch(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
     targets = [compute_targets(h, w, box_pred[b], iou_pred[b], gt_boxes[b],
                                gt_classes[b], anchors) for b in range(box_pred.shape[0])]
 
