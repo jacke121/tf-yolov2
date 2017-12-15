@@ -40,6 +40,7 @@ print('start training')
 for epoch in range(1, args.epochs + 1):
     iter = 0
 
+    # double images per batch with left-right flipping
     for batch_images, batch_boxes, batch_classes, num_boxes_batch in blob.next_batch():
         iter += 1
 

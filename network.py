@@ -17,7 +17,7 @@ def forward(inputs, num_outputs, scope=None):
         with slim.arg_scope([slim.conv2d],
                             activation_fn=tf.nn.relu,
                             normalizer_fn=slim.batch_norm,
-                            weights_initializer=tf.contrib.layers.xavier_initializer()):
+                            weights_initializer=tf.contrib.layers.xavier_initializer(uniform=False)):
             net = slim.repeat(inputs, 2, slim.conv2d, 64,
                               [3, 3], scope='conv1')
             net = slim.max_pool2d(net, [2, 2], scope='pool1')

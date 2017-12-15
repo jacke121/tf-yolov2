@@ -58,7 +58,6 @@ class BlobLoader:
         self.anno_dir = anno_dir
         self.anno = os.listdir(os.path.join(cfg.data_dir, anno_dir))
         self.num_anno = len(self.anno)
-        # assert batch_size < self.num_anno
         self.batch_size = batch_size
         self.start_idx = 0
 
@@ -77,7 +76,10 @@ class BlobLoader:
                 batch_images.append(image)
                 batch_boxes.append(boxes)
                 batch_classes.append(classes)
-                # flip_image, flip_boxes = lr_flip(image, boxes)
+                flip_image, flip_boxes = lr_flip(image, boxes)
+                batch_images.append(flip_image)
+                batch_boxes.append(flip_boxes)
+                batch_classes.append(classes)
 
             self.start_idx = end_idx if end_idx < self.num_anno else 0
 
@@ -97,6 +99,12 @@ class BlobLoader:
                 num_boxes_im = len(batch_classes[i])
                 batch_boxes_pad[i, 0:num_boxes_im, :] = batch_boxes[i]
                 batch_classes_pad[i, 0:num_boxes_im] = batch_classes[i]
+
+            # shuffle images in batch
+            inds = np.random.permutation(self.batch_size * 2)
+            batch_images = batch_images[inds]
+            batch_boxes_pad = batch_boxes_pad[inds]
+            batch_classes_pad = batch_classes_pad[inds]
 
             yield batch_images, batch_boxes_pad, batch_classes_pad, num_boxes_batch
 
