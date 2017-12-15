@@ -77,7 +77,7 @@ def draw_targets(image, box_pred, cls_inds, scores):
         box_label = cfg.label_names[box_cls]
         box_color = cfg.label_colors[box_label]
         p1 = (box_pred[b, 1], box_pred[b, 0])
-        p2 = (box_pred[b, 3], box_pred[b, 1])
+        p2 = (box_pred[b, 3], box_pred[b, 2])
 
         cv2.rectangle(image, p1, p2, box_color, 2)
         cv2.putText(image, '{}_{:.3f}'.format(

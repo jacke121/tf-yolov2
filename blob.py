@@ -39,7 +39,7 @@ def prep_image(anno_dir, xml):
 
     image = cv2.imread(os.path.join(cfg.data_dir, 'images', image_name))
     image = cv2.resize(image, (cfg.inp_size, cfg.inp_size))
-    image /= 255.0
+    # image /= 255.0
 
     return image, boxes, classes
 

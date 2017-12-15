@@ -55,6 +55,9 @@ class Network:
         self.images_ph = tf.placeholder(
             tf.float32, shape=[None, cfg.inp_size, cfg.inp_size, 3])
 
+        self.anchors_ph = tf.placeholder(
+            tf.float32, shape=[cfg.num_anchors, 2])
+
         # compute targets
         logits = forward(self.images_ph,
                          num_outputs=cfg.num_anchors * (cfg.num_classes + 5),
@@ -63,14 +66,14 @@ class Network:
         h, w = logits.get_shape().as_list()[1:3]
 
         logits = tf.reshape(logits,
-                            [-1, self.h * self.w, cfg.num_anchors, cfg.num_classes + 5])
+                            [-1, h * w, cfg.num_anchors, cfg.num_classes + 5])
 
         bbox_pred = tf.concat([tf.sigmoid(logits[:, :, :, 0:2]), tf.exp(logits[:, :, :, 2:4])],
                               axis=3)
 
         self.box_pred = tf.py_func(bbox_transform,
                                    [bbox_pred, self.anchors_ph, h, w],
-                                   [tf.float32], name='box_pred')
+                                   tf.float32, name='box_pred')
 
         self.iou_pred = tf.sigmoid(logits[:, :, :, 4:5])
 
@@ -82,9 +85,6 @@ class Network:
 
             self.classes_ph = tf.placeholder(tf.int8, shape=None)
 
-            self.anchors_ph = tf.placeholder(
-                tf.float32, shape=[cfg.num_anchors, 2])
-
             self.num_boxes_batch_ph = tf.placeholder(tf.float32, shape=None)
 
             _cls, _cls_mask, _iou, _iou_mask, _bbox, _bbox_mask = tf.py_func(compute_targets_batch,
@@ -94,7 +94,7 @@ class Network:
 
             # network's losses, focal loss on cls?
             self.bbox_loss = tf.losses.mean_squared_error(labels=_bbox * _bbox_mask,
-                                                          predictions=self.bbox_pred * _bbox_mask)
+                                                          predictions=bbox_pred * _bbox_mask)
             self.iou_loss = tf.losses.mean_squared_error(labels=_iou * _iou_mask,
                                                          predictions=self.iou_pred * _iou_mask)
             self.cls_loss = tf.losses.mean_squared_error(labels=_cls * _cls_mask,
@@ -114,7 +114,7 @@ class Network:
                 self.optimizer = tf.train.GradientDescentOptimizer(learning_rate=lr).minimize(
                     loss=self.total_loss, global_step=self.global_step)
 
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(max_to_keep=3)
 
         self.load_ckpt(pretrained)
 
@@ -181,9 +181,10 @@ class Network:
 
         print('saved checkpoint at step {}'.format(step))
 
-    def compute(self, scaled_images):
+    def compute(self, scaled_images, anchors):
         box_pred, iou_pred, cls_pred = self.sess.run([self.box_pred, self.iou_pred, self.cls_pred],
-                                                     feed_dict={self.images_ph: scaled_images})
+                                                     feed_dict={self.images_ph: scaled_images,
+                                                                self.anchors_ph: anchors})
 
         return box_pred, iou_pred, cls_pred
 

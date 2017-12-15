@@ -14,14 +14,14 @@ train_anno_dir = os.path.join(cfg.data_dir, 'annotation_val')
 
 # add gpu/cpu options??
 parser = argparse.ArgumentParser()
-parser.add_argument('--epochs', type=int, default=50)
-parser.add_argument('--batch', type=int, default=4)
-parser.add_argument('--lr', type=float, default=1e-5)
+parser.add_argument('--epochs', type=int, default=50)  # num training epochs
+parser.add_argument('--batch', type=int, default=4)  # num images per batch
+parser.add_argument('--lr', type=float, default=1e-5)  # learning rate
 args = parser.parse_args()
 
 # tf configuration
 tfcfg = tf.ConfigProto()
-tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.7
+tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.8
 tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
 net = Network(session=tf.Session(config=tfcfg), is_training=True,
