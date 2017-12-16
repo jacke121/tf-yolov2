@@ -48,7 +48,7 @@ def lr_flip(image, boxes):
     flip_image = cv2.flip(image, 1)
 
     flip_boxes = np.copy(boxes)
-    flip_boxes[:, 0::2] = image.shape[1] - flip_boxes[:, 0::2]
+    flip_boxes[:, 1::2] = image.shape[1] - flip_boxes[:, 1::2]
 
     return flip_image, flip_boxes
 
