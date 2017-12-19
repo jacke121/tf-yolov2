@@ -118,19 +118,19 @@ ext_modules = [
         "utils.cython_bbox",
         ["utils/bbox.pyx"],
         extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
-        include_dirs=[numpy_include]
+        include_dirs=[numpy_include, '.']
     ),
-    Extension(
-        'cython_compute_targets',
-        ['compute_targets.pyx'],
-        extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
-        include_dirs=[numpy_include]
-    ),
+    # Extension(
+    #     'utils.compute_targets',
+    #     ['utils/compute_targets.pyx'],
+    #     extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
+    #     include_dirs=[numpy_include, '.']
+    # ),
     Extension(
         "nms.cpu_nms",
         ["nms/cpu_nms.pyx"],
         extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
-        include_dirs=[numpy_include]
+        include_dirs=[numpy_include, '.']
     ),
     Extension(
         'nms.gpu_nms',
@@ -148,7 +148,7 @@ ext_modules = [
                                      '-c',
                                      '--compiler-options',
                                      "'-fPIC'"]},
-        include_dirs=[numpy_include, CUDA['include']]
+        include_dirs=[numpy_include, CUDA['include'], '.']
     )
 ]
 
