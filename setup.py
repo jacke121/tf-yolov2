@@ -115,17 +115,17 @@ class custom_build_ext(build_ext):
 
 ext_modules = [
     Extension(
-        "utils.cython_bbox",
+        "utils.bbox",
         ["utils/bbox.pyx"],
         extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
         include_dirs=[numpy_include, '.']
     ),
-    # Extension(
-    #     'utils.compute_targets',
-    #     ['utils/compute_targets.pyx'],
-    #     extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
-    #     include_dirs=[numpy_include, '.']
-    # ),
+    Extension(
+        'compute_targets',
+        ['compute_targets.pyx'],
+        extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
+        include_dirs=[numpy_include, '.']
+    ),
     Extension(
         "nms.cpu_nms",
         ["nms/cpu_nms.pyx"],

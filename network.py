@@ -2,8 +2,8 @@ from __future__ import absolute_import, division, print_function
 import os
 import tensorflow as tf
 import config as cfg
-from utils.py_compute_targets import compute_targets_batch
-from utils.cython_bbox import bbox_transform
+from py_compute_targets import compute_targets_batch
+from utils.bbox import bbox_transform
 
 slim = tf.contrib.slim
 

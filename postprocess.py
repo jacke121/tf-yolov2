@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import config as cfg
 from nms_wrapper import nms
-from utils.cython_bbox import bbox_transform
+from utils.bbox import bbox_transform
 
 
 def clip_boxes(boxes, im_shape):

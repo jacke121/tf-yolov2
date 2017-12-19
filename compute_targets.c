@@ -518,8 +518,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__utils__compute_targets
-#define __PYX_HAVE_API__utils__compute_targets
+#define __PYX_HAVE__compute_targets
+#define __PYX_HAVE_API__compute_targets
 #include <string.h>
 #include <stdio.h>
 #include "numpy/arrayobject.h"
@@ -749,7 +749,7 @@ static const char *__pyx_filename;
 
 
 static const char *__pyx_f[] = {
-  "utils/compute_targets.pyx",
+  "compute_targets.pyx",
   "__init__.pxd",
   "type.pxd",
 };
@@ -979,7 +979,7 @@ typedef npy_double __pyx_t_5numpy_double_t;
  */
 typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
 
-/* "bbox.pxd":6
+/* "utils/bbox.pxd":6
  * 
  * DTYPE = np.float32
  * ctypedef np.float32_t DTYPE_t             # <<<<<<<<<<<<<<
@@ -988,14 +988,14 @@ typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
  */
 typedef __pyx_t_5numpy_float32_t __pyx_t_5utils_4bbox_DTYPE_t;
 
-/* "utils/compute_targets.pyx":8
+/* "compute_targets.pyx":8
  * 
  * DTYPE = np.float32
  * ctypedef np.float32_t DTYPE_t             # <<<<<<<<<<<<<<
  * 
  * def foo(np.ndarray[DTYPE_t, ndim=2] a, np.ndarray[DTYPE_t, ndim=2] b):
  */
-typedef __pyx_t_5numpy_float32_t __pyx_t_5utils_15compute_targets_DTYPE_t;
+typedef __pyx_t_5numpy_float32_t __pyx_t_15compute_targets_DTYPE_t;
 /* Declarations.proto */
 #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
@@ -1526,13 +1526,13 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, cha
 /* Module declarations from 'utils.bbox' */
 static PyObject *(*__pyx_f_5utils_4bbox_box_overlaps_op)(PyArrayObject *, PyArrayObject *); /*proto*/
 
-/* Module declarations from 'utils.compute_targets' */
-static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5utils_15compute_targets_DTYPE_t = { "DTYPE_t", NULL, sizeof(__pyx_t_5utils_15compute_targets_DTYPE_t), { 0 }, 0, 'R', 0, 0 };
-#define __Pyx_MODULE_NAME "utils.compute_targets"
-extern int __pyx_module_is_main_utils__compute_targets;
-int __pyx_module_is_main_utils__compute_targets = 0;
+/* Module declarations from 'compute_targets' */
+static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_15compute_targets_DTYPE_t = { "DTYPE_t", NULL, sizeof(__pyx_t_15compute_targets_DTYPE_t), { 0 }, 0, 'R', 0, 0 };
+#define __Pyx_MODULE_NAME "compute_targets"
+extern int __pyx_module_is_main_compute_targets;
+int __pyx_module_is_main_compute_targets = 0;
 
-/* Implementation of 'utils.compute_targets' */
+/* Implementation of 'compute_targets' */
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_range;
 static PyObject *__pyx_builtin_RuntimeError;
@@ -1553,9 +1553,9 @@ static const char __pyx_k_float32[] = "float32";
 static const char __pyx_k_ValueError[] = "ValueError";
 static const char __pyx_k_ImportError[] = "ImportError";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
+static const char __pyx_k_compute_targets[] = "compute_targets";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
-static const char __pyx_k_utils_compute_targets[] = "utils.compute_targets";
-static const char __pyx_k_utils_compute_targets_pyx[] = "utils/compute_targets.pyx";
+static const char __pyx_k_compute_targets_pyx[] = "compute_targets.pyx";
 static const char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
 static const char __pyx_k_numpy_core_multiarray_failed_to[] = "numpy.core.multiarray failed to import";
 static const char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
@@ -1575,6 +1575,8 @@ static PyObject *__pyx_n_s_a;
 static PyObject *__pyx_n_s_b;
 static PyObject *__pyx_n_s_cfg;
 static PyObject *__pyx_n_s_cline_in_traceback;
+static PyObject *__pyx_n_s_compute_targets;
+static PyObject *__pyx_kp_s_compute_targets_pyx;
 static PyObject *__pyx_n_s_config;
 static PyObject *__pyx_n_s_float32;
 static PyObject *__pyx_n_s_foo;
@@ -1589,9 +1591,7 @@ static PyObject *__pyx_kp_s_numpy_core_umath_failed_to_impor;
 static PyObject *__pyx_n_s_range;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
-static PyObject *__pyx_n_s_utils_compute_targets;
-static PyObject *__pyx_kp_s_utils_compute_targets_pyx;
-static PyObject *__pyx_pf_5utils_15compute_targets_foo(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_a, PyArrayObject *__pyx_v_b); /* proto */
+static PyObject *__pyx_pf_15compute_targets_foo(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_a, PyArrayObject *__pyx_v_b); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
 static PyObject *__pyx_tuple_;
@@ -1606,17 +1606,17 @@ static PyObject *__pyx_tuple__9;
 static PyObject *__pyx_tuple__10;
 static PyObject *__pyx_codeobj__11;
 
-/* "utils/compute_targets.pyx":10
+/* "compute_targets.pyx":10
  * ctypedef np.float32_t DTYPE_t
  * 
  * def foo(np.ndarray[DTYPE_t, ndim=2] a, np.ndarray[DTYPE_t, ndim=2] b):             # <<<<<<<<<<<<<<
- *     return box_overlaps_op(a, b)
+ *     return cython_bbox.box_overlaps_op(a, b)
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_5utils_15compute_targets_1foo(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_5utils_15compute_targets_1foo = {"foo", (PyCFunction)__pyx_pw_5utils_15compute_targets_1foo, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_5utils_15compute_targets_1foo(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_15compute_targets_1foo(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_15compute_targets_1foo = {"foo", (PyCFunction)__pyx_pw_15compute_targets_1foo, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_15compute_targets_1foo(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_a = 0;
   PyArrayObject *__pyx_v_b = 0;
   PyObject *__pyx_r = 0;
@@ -1664,13 +1664,13 @@ static PyObject *__pyx_pw_5utils_15compute_targets_1foo(PyObject *__pyx_self, Py
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("foo", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 10, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("utils.compute_targets.foo", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("compute_targets.foo", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_a), __pyx_ptype_5numpy_ndarray, 1, "a", 0))) __PYX_ERR(0, 10, __pyx_L1_error)
   if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_b), __pyx_ptype_5numpy_ndarray, 1, "b", 0))) __PYX_ERR(0, 10, __pyx_L1_error)
-  __pyx_r = __pyx_pf_5utils_15compute_targets_foo(__pyx_self, __pyx_v_a, __pyx_v_b);
+  __pyx_r = __pyx_pf_15compute_targets_foo(__pyx_self, __pyx_v_a, __pyx_v_b);
 
   /* function exit code */
   goto __pyx_L0;
@@ -1681,7 +1681,7 @@ static PyObject *__pyx_pw_5utils_15compute_targets_1foo(PyObject *__pyx_self, Py
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_5utils_15compute_targets_foo(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_a, PyArrayObject *__pyx_v_b) {
+static PyObject *__pyx_pf_15compute_targets_foo(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_a, PyArrayObject *__pyx_v_b) {
   __Pyx_LocalBuf_ND __pyx_pybuffernd_a;
   __Pyx_Buffer __pyx_pybuffer_a;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_b;
@@ -1700,19 +1700,19 @@ static PyObject *__pyx_pf_5utils_15compute_targets_foo(CYTHON_UNUSED PyObject *_
   __pyx_pybuffernd_b.rcbuffer = &__pyx_pybuffer_b;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_a.rcbuffer->pybuffer, (PyObject*)__pyx_v_a, &__Pyx_TypeInfo_nn___pyx_t_5utils_15compute_targets_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_a.rcbuffer->pybuffer, (PyObject*)__pyx_v_a, &__Pyx_TypeInfo_nn___pyx_t_15compute_targets_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
   }
   __pyx_pybuffernd_a.diminfo[0].strides = __pyx_pybuffernd_a.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_a.diminfo[0].shape = __pyx_pybuffernd_a.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_a.diminfo[1].strides = __pyx_pybuffernd_a.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_a.diminfo[1].shape = __pyx_pybuffernd_a.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_b.rcbuffer->pybuffer, (PyObject*)__pyx_v_b, &__Pyx_TypeInfo_nn___pyx_t_5utils_15compute_targets_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_b.rcbuffer->pybuffer, (PyObject*)__pyx_v_b, &__Pyx_TypeInfo_nn___pyx_t_15compute_targets_DTYPE_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
   }
   __pyx_pybuffernd_b.diminfo[0].strides = __pyx_pybuffernd_b.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_b.diminfo[0].shape = __pyx_pybuffernd_b.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_b.diminfo[1].strides = __pyx_pybuffernd_b.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_b.diminfo[1].shape = __pyx_pybuffernd_b.rcbuffer->pybuffer.shape[1];
 
-  /* "utils/compute_targets.pyx":11
+  /* "compute_targets.pyx":11
  * 
  * def foo(np.ndarray[DTYPE_t, ndim=2] a, np.ndarray[DTYPE_t, ndim=2] b):
- *     return box_overlaps_op(a, b)             # <<<<<<<<<<<<<<
+ *     return cython_bbox.box_overlaps_op(a, b)             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_1 = __pyx_f_5utils_4bbox_box_overlaps_op(((PyArrayObject *)__pyx_v_a), ((PyArrayObject *)__pyx_v_b)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 11, __pyx_L1_error)
@@ -1721,11 +1721,11 @@ static PyObject *__pyx_pf_5utils_15compute_targets_foo(CYTHON_UNUSED PyObject *_
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "utils/compute_targets.pyx":10
+  /* "compute_targets.pyx":10
  * ctypedef np.float32_t DTYPE_t
  * 
  * def foo(np.ndarray[DTYPE_t, ndim=2] a, np.ndarray[DTYPE_t, ndim=2] b):             # <<<<<<<<<<<<<<
- *     return box_overlaps_op(a, b)
+ *     return cython_bbox.box_overlaps_op(a, b)
  */
 
   /* function exit code */
@@ -1738,7 +1738,7 @@ static PyObject *__pyx_pf_5utils_15compute_targets_foo(CYTHON_UNUSED PyObject *_
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_a.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_b.rcbuffer->pybuffer);
   __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
-  __Pyx_AddTraceback("utils.compute_targets.foo", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("compute_targets.foo", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
@@ -4380,6 +4380,8 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_b, __pyx_k_b, sizeof(__pyx_k_b), 0, 0, 1, 1},
   {&__pyx_n_s_cfg, __pyx_k_cfg, sizeof(__pyx_k_cfg), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
+  {&__pyx_n_s_compute_targets, __pyx_k_compute_targets, sizeof(__pyx_k_compute_targets), 0, 0, 1, 1},
+  {&__pyx_kp_s_compute_targets_pyx, __pyx_k_compute_targets_pyx, sizeof(__pyx_k_compute_targets_pyx), 0, 0, 1, 0},
   {&__pyx_n_s_config, __pyx_k_config, sizeof(__pyx_k_config), 0, 0, 1, 1},
   {&__pyx_n_s_float32, __pyx_k_float32, sizeof(__pyx_k_float32), 0, 0, 1, 1},
   {&__pyx_n_s_foo, __pyx_k_foo, sizeof(__pyx_k_foo), 0, 0, 1, 1},
@@ -4394,8 +4396,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_kp_u_unknown_dtype_code_in_numpy_pxd, __pyx_k_unknown_dtype_code_in_numpy_pxd, sizeof(__pyx_k_unknown_dtype_code_in_numpy_pxd), 0, 1, 0, 0},
-  {&__pyx_n_s_utils_compute_targets, __pyx_k_utils_compute_targets, sizeof(__pyx_k_utils_compute_targets), 0, 0, 1, 1},
-  {&__pyx_kp_s_utils_compute_targets_pyx, __pyx_k_utils_compute_targets_pyx, sizeof(__pyx_k_utils_compute_targets_pyx), 0, 0, 1, 0},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
@@ -4509,16 +4509,16 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
 
-  /* "utils/compute_targets.pyx":10
+  /* "compute_targets.pyx":10
  * ctypedef np.float32_t DTYPE_t
  * 
  * def foo(np.ndarray[DTYPE_t, ndim=2] a, np.ndarray[DTYPE_t, ndim=2] b):             # <<<<<<<<<<<<<<
- *     return box_overlaps_op(a, b)
+ *     return cython_bbox.box_overlaps_op(a, b)
  */
   __pyx_tuple__10 = PyTuple_Pack(2, __pyx_n_s_a, __pyx_n_s_b); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__10);
   __Pyx_GIVEREF(__pyx_tuple__10);
-  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_utils_compute_targets_pyx, __pyx_n_s_foo, 10, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(2, 0, 2, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_compute_targets_pyx, __pyx_n_s_foo, 10, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -4653,14 +4653,14 @@ static int __pyx_pymod_exec_compute_targets(PyObject *__pyx_pyinit_module)
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
-  if (__pyx_module_is_main_utils__compute_targets) {
+  if (__pyx_module_is_main_compute_targets) {
     if (PyObject_SetAttrString(__pyx_m, "__name__", __pyx_n_s_main) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(0, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "utils.compute_targets")) {
-      if (unlikely(PyDict_SetItemString(modules, "utils.compute_targets", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "compute_targets")) {
+      if (unlikely(PyDict_SetItemString(modules, "compute_targets", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
     }
   }
   #endif
@@ -4695,7 +4695,7 @@ static int __pyx_pymod_exec_compute_targets(PyObject *__pyx_pyinit_module)
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "utils/compute_targets.pyx":2
+  /* "compute_targets.pyx":2
  * cimport cython
  * import numpy as np             # <<<<<<<<<<<<<<
  * cimport numpy as np
@@ -4706,11 +4706,11 @@ static int __pyx_pymod_exec_compute_targets(PyObject *__pyx_pyinit_module)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_2) < 0) __PYX_ERR(0, 2, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "utils/compute_targets.pyx":4
+  /* "compute_targets.pyx":4
  * import numpy as np
  * cimport numpy as np
  * import config as cfg             # <<<<<<<<<<<<<<
- * from bbox cimport box_overlaps_op
+ * cimport utils.bbox as cython_bbox
  * 
  */
   __pyx_t_2 = __Pyx_Import(__pyx_n_s_config, 0, -1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 4, __pyx_L1_error)
@@ -4718,8 +4718,8 @@ static int __pyx_pymod_exec_compute_targets(PyObject *__pyx_pyinit_module)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_cfg, __pyx_t_2) < 0) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "utils/compute_targets.pyx":7
- * from bbox cimport box_overlaps_op
+  /* "compute_targets.pyx":7
+ * cimport utils.bbox as cython_bbox
  * 
  * DTYPE = np.float32             # <<<<<<<<<<<<<<
  * ctypedef np.float32_t DTYPE_t
@@ -4733,18 +4733,18 @@ static int __pyx_pymod_exec_compute_targets(PyObject *__pyx_pyinit_module)
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_DTYPE, __pyx_t_3) < 0) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "utils/compute_targets.pyx":10
+  /* "compute_targets.pyx":10
  * ctypedef np.float32_t DTYPE_t
  * 
  * def foo(np.ndarray[DTYPE_t, ndim=2] a, np.ndarray[DTYPE_t, ndim=2] b):             # <<<<<<<<<<<<<<
- *     return box_overlaps_op(a, b)
+ *     return cython_bbox.box_overlaps_op(a, b)
  */
-  __pyx_t_3 = PyCFunction_NewEx(&__pyx_mdef_5utils_15compute_targets_1foo, NULL, __pyx_n_s_utils_compute_targets); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_3 = PyCFunction_NewEx(&__pyx_mdef_15compute_targets_1foo, NULL, __pyx_n_s_compute_targets); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_foo, __pyx_t_3) < 0) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "utils/compute_targets.pyx":1
+  /* "compute_targets.pyx":1
  * cimport cython             # <<<<<<<<<<<<<<
  * import numpy as np
  * cimport numpy as np
@@ -4771,11 +4771,11 @@ static int __pyx_pymod_exec_compute_targets(PyObject *__pyx_pyinit_module)
   __Pyx_XDECREF(__pyx_t_3);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init utils.compute_targets", 0, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init compute_targets", 0, __pyx_lineno, __pyx_filename);
     }
     Py_DECREF(__pyx_m); __pyx_m = 0;
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init utils.compute_targets");
+    PyErr_SetString(PyExc_ImportError, "init compute_targets");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import numpy as np
 import config as cfg
-from utils.cython_bbox import box_overlaps, anchor_overlaps
+from utils.bbox import box_overlaps, anchor_overlaps
 
 
 def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
