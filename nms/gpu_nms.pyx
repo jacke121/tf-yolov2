@@ -5,6 +5,7 @@
 # Written by Ross Girshick
 # --------------------------------------------------------
 
+cimport cython
 import numpy as np
 cimport numpy as np
 
@@ -13,7 +14,7 @@ assert sizeof(int) == sizeof(np.int32_t)
 cdef extern from "gpu_nms.hpp":
     void _nms(np.int32_t*, int*, np.float32_t*, int, int, float, int)
 
-def gpu_nms(np.ndarray[np.float32_t, ndim=2] dets, np.float thresh,
+cdef gpu_nms_op(np.ndarray[np.float32_t, ndim=2] dets, np.float thresh,
             np.int32_t device_id=0):
     cdef int boxes_num = dets.shape[0]
     cdef int boxes_dim = dets.shape[1]
@@ -29,3 +30,8 @@ def gpu_nms(np.ndarray[np.float32_t, ndim=2] dets, np.float thresh,
     _nms(&keep[0], &num_out, &sorted_dets[0, 0], boxes_num, boxes_dim, thresh, device_id)
     keep = keep[:num_out]
     return list(order[keep])
+
+def gpu_nms(np.ndarray[np.float32_t, ndim=2] dets, np.float thresh,
+            np.int32_t device_id=0):
+    
+    return gpu_nms_op(dets, thresh, device_id)

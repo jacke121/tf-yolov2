@@ -121,37 +121,39 @@ ext_modules = [
         include_dirs=[numpy_include]
     ),
     Extension(
+        'cython_compute_targets',
+        ['compute_targets.pyx'],
+        extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
+        include_dirs=[numpy_include]
+    ),
+    Extension(
         "nms.cpu_nms",
         ["nms/cpu_nms.pyx"],
         extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
         include_dirs=[numpy_include]
     ),
-    Extension('nms.gpu_nms',
-              ['nms/nms_kernel.cu', 'nms/gpu_nms.pyx'],
-              library_dirs=[CUDA['lib64']],
-              libraries=['cudart'],
-              language='c++',
-              runtime_library_dirs=[CUDA['lib64']],
-              # this syntax is specific to this build system
-              # we're only going to use certain compiler args with nvcc and not with gcc
-              # the implementation of this trick is in customize_compiler() below
-              extra_compile_args={'gcc': ["-Wno-unused-function"],
-                                  'nvcc': ['-arch=sm_61',
-                                           '--ptxas-options=-v',
-                                           '-c',
-                                           '--compiler-options',
-                                           "'-fPIC'"]},
-              include_dirs=[numpy_include, CUDA['include']]
-              ),
-    Extension('compute_targets',
-              ['compute_targets.pyx'],
-              extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
-              include_dirs=[numpy_include]
-              )
+    Extension(
+        'nms.gpu_nms',
+        ['nms/nms_kernel.cu', 'nms/gpu_nms.pyx'],
+        library_dirs=[CUDA['lib64']],
+        libraries=['cudart'],
+        language='c++',
+        runtime_library_dirs=[CUDA['lib64']],
+        # this syntax is specific to this build system
+        # we're only going to use certain compiler args with nvcc and not with gcc
+        # the implementation of this trick is in customize_compiler() below
+        extra_compile_args={'gcc': ["-Wno-unused-function"],
+                            'nvcc': ['-arch=sm_61',
+                                     '--ptxas-options=-v',
+                                     '-c',
+                                     '--compiler-options',
+                                     "'-fPIC'"]},
+        include_dirs=[numpy_include, CUDA['include']]
+    )
 ]
 
 setup(
-    name='tf_yolo2',
+    name='tf_yolov2',
     ext_modules=ext_modules,
     # inject our custom trigger
     cmdclass={'build_ext': custom_build_ext},

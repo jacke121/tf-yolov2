@@ -19,7 +19,8 @@ tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_
 
 net = Network(session=tf.Session(config=tfcfg), is_training=False)
 
-image = cv2.imread('./test/img00001.jpg')
+image_name = 'img00001.jpg'
+image = cv2.imread(os.path.join(cfg.workspace, 'test', image_name))
 scaled_image = cv2.resize(image, (cfg.inp_size, cfg.inp_size))
 anchors = get_anchors(target_size=(cfg.inp_size, cfg.inp_size))
 
@@ -32,8 +33,8 @@ box_pred, cls_inds, scores = postprocess(box_pred[0], iou_pred[0], cls_pred[0],
 
 image = draw_targets(image, box_pred, cls_inds, scores)
 
-print('time: ' + str(timedelta(seconds=time.time() - start_t)))
+print('usage time: ' + str(timedelta(seconds=time.time() - start_t)))
 
-cv2.imshow('testing', image)
+cv2.imshow(image_name, image)
 cv2.waitKey(0)
 cv2.destroyAllWindows()

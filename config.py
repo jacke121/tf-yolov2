@@ -7,7 +7,10 @@ import numpy as np
 model = 'detrac'
 
 # working directories
-data_dir = '/home/dat/data/detrac'
+# pascal/voc
+
+# detrac
+data_dir = '/home/dattr/data/detrac'
 
 workspace = os.path.dirname(os.path.abspath(__file__))
 ckpt_dir = os.path.join(workspace, 'ckpt')
@@ -15,11 +18,20 @@ if not os.path.exists(ckpt_dir):
     os.makedirs(ckpt_dir)
 
 # target_size = (inp_size, inp_size)
+# todo: various shapes (inp_h != inp_w)
 inp_size = 416  # multiscale training on [416, 448, 480]
 num_anchors = 5
 
 # object labels and class colors
+# pascal/voc labels
+# label_names = ['person',
+#                'bird', 'cat', 'cow', 'dog', 'horse', 'sheep',
+#                'aeroplane', 'bicycle', 'boat', 'bus', 'car', 'motorbike', 'train',
+#                'bottle', 'chair', 'dining table', 'potted plant', 'sofa', 'tv/monitor']
+
+# detrac labels
 label_names = ['others', 'car', 'bus', 'van']
+
 num_classes = len(label_names)
 label_colors = {}
 for label in label_names:

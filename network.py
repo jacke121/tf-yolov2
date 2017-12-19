@@ -2,7 +2,7 @@ from __future__ import absolute_import, division, print_function
 import os
 import tensorflow as tf
 import config as cfg
-from py_compute_targets import compute_targets_batch
+from utils.py_compute_targets import compute_targets_batch
 from utils.cython_bbox import bbox_transform
 
 slim = tf.contrib.slim

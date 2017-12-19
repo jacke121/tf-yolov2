@@ -10,7 +10,9 @@ from utils.anchors import get_anchors
 
 slim = tf.contrib.slim
 
+# ie. Annotations and JPEGImages in pascal/voc
 train_anno_dir = os.path.join(cfg.data_dir, 'annotation_val')
+train_images_dir = os.path.join(cfg.data_dir, 'images')
 
 # add gpu/cpu options??
 # 2*batch_size images per batch with left-right flipping
@@ -32,7 +34,8 @@ net = Network(session=tf.Session(config=tfcfg), is_training=True,
 # load anchors and data
 print('loading anchors and dataset')
 anchors = get_anchors(target_size=(cfg.inp_size, cfg.inp_size))
-blob = BlobLoader(anno_dir=train_anno_dir, batch_size=args.batch)
+blob = BlobLoader(anno_dir=train_anno_dir,
+                  images_dir=train_images_dir, batch_size=args.batch)
 num_iters = blob.num_anno // args.batch
 step = 0
 

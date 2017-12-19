@@ -10,7 +10,7 @@ for idx, label in enumerate(cfg.label_names):
     label2cls[label] = idx
 
 
-def prep_image(anno_dir, xml):
+def prep_image(anno_dir, images_dir, xml):
     # image in shape of [height, width, num_channels]
     # boxes in shape of [num_gt_boxes, (xmin, ymin, xmax, ymax)], scaled in cfg.inp_size
     # classes in shape of [num_gt_boxes, (cls)]
@@ -24,7 +24,7 @@ def prep_image(anno_dir, xml):
     for box in root.findall('object'):
         classes.append(label2cls[box.find('name').text])
         bndbox = box.find('bndbox')
-        # opposite to pascal/voc annotation
+        # using numpy's axis (not pascal/voc)
         boxes.append([float(bndbox.find('ymin').text),
                       float(bndbox.find('xmin').text),
                       float(bndbox.find('ymax').text),
@@ -37,13 +37,14 @@ def prep_image(anno_dir, xml):
 
     classes = np.array(classes, dtype=np.int8)
 
-    image = cv2.imread(os.path.join(cfg.data_dir, 'images', image_name))
+    image = cv2.imread(os.path.join(cfg.data_dir, images_dir, image_name))
     image = cv2.resize(image, (cfg.inp_size, cfg.inp_size))
     # image /= 255.0
 
     return image, boxes, classes
 
 
+# data augmentation
 def lr_flip(image, boxes):
     flip_image = cv2.flip(image, 1)
 
@@ -53,9 +54,11 @@ def lr_flip(image, boxes):
     return flip_image, flip_boxes
 
 
+# data generator
 class BlobLoader:
-    def __init__(self, anno_dir, batch_size=1):
+    def __init__(self, anno_dir, images_dir, batch_size=1):
         self.anno_dir = anno_dir
+        self.images_dir = images_dir
         self.anno = os.listdir(os.path.join(cfg.data_dir, anno_dir))
         self.num_anno = len(self.anno)
         self.batch_size = batch_size
@@ -72,7 +75,8 @@ class BlobLoader:
 
             end_idx = min(self.start_idx + self.batch_size, self.num_anno)
             for xml in self.anno[self.start_idx:end_idx]:
-                image, boxes, classes = prep_image(self.anno_dir, xml)
+                image, boxes, classes = prep_image(
+                    self.anno_dir, self.images_dir, xml)
                 batch_images.append(image)
                 batch_boxes.append(boxes)
                 batch_classes.append(classes)
