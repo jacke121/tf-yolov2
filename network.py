@@ -12,12 +12,13 @@ def leaky(features, name=None):
     return tf.nn.leaky_relu(features, alpha=0.1, name=name)
 
 
+# network's feed-forward used from nets/
 def forward(inputs, num_outputs, scope=None):
     with tf.variable_scope(scope, 'net', [inputs], reuse=tf.AUTO_REUSE):
         with slim.arg_scope([slim.conv2d],
                             activation_fn=tf.nn.relu,
                             normalizer_fn=slim.batch_norm,
-                            weights_initializer=tf.contrib.layers.xavier_initializer(uniform=False)):
+                            weights_initializer=tf.contrib.layers.xavier_initializer(uniform=True)):
             net = slim.repeat(inputs, 2, slim.conv2d, 64,
                               [3, 3], scope='conv1')
             net = slim.max_pool2d(net, [2, 2], scope='pool1')
@@ -26,24 +27,20 @@ def forward(inputs, num_outputs, scope=None):
                               [3, 3], scope='conv2')
             net = slim.max_pool2d(net, [2, 2], scope='pool2')
 
-            net = slim.repeat(net, 2, slim.conv2d, 256,
+            net = slim.repeat(net, 3, slim.conv2d, 256,
                               [3, 3], scope='conv3')
-            sc = slim.conv2d(net, 512, [1, 1], stride=2, scope='sc3')
             net = slim.max_pool2d(net, [2, 2], scope='pool3')
 
-            net = slim.repeat(net, 2, slim.conv2d, 512,
-                              [3, 3], scope='conv4') + sc
-            sc = slim.max_pool2d(net, [1, 1], stride=2, scope='sc4')
+            net = slim.repeat(net, 3, slim.conv2d, 512,
+                              [3, 3], scope='conv4')
             net = slim.max_pool2d(net, [2, 2], scope='pool4')
 
-            net = slim.repeat(net, 2, slim.conv2d, 512,
-                              [3, 3], scope='conv5') + sc
-            sc = slim.max_pool2d(net, [1, 1], stride=2, scope='sc5')
+            net = slim.repeat(net, 3, slim.conv2d, 512,
+                              [3, 3], scope='conv5')
             net = slim.max_pool2d(net, [2, 2], scope='pool5')
 
-            net = slim.repeat(net, 2, slim.conv2d, 512,
-                              [3, 3], scope='conv6') + sc
-            net = slim.conv2d(net, num_outputs, [1, 1], stride=1,
+            net = slim.conv2d(net, 512, [3, 3], scope='conv6')
+            net = slim.conv2d(net, num_outputs, [1, 1],
                               activation_fn=None, normalizer_fn=None, scope='logits')
 
     return net
@@ -97,14 +94,13 @@ class Network:
 
             # network's losses, focal loss on cls?
             self.bbox_loss = tf.losses.mean_squared_error(labels=_bbox * _bbox_mask,
-                                                          predictions=bbox_pred * _bbox_mask)
+                                                          predictions=bbox_pred * _bbox_mask) / self.num_boxes_batch_ph
             self.iou_loss = tf.losses.mean_squared_error(labels=_iou * _iou_mask,
-                                                         predictions=self.iou_pred * _iou_mask)
+                                                         predictions=self.iou_pred * _iou_mask) / self.num_boxes_batch_ph
             self.cls_loss = tf.losses.mean_squared_error(labels=_cls * _cls_mask,
-                                                         predictions=self.cls_pred * _cls_mask)
+                                                         predictions=self.cls_pred * _cls_mask) / self.num_boxes_batch_ph
 
-            self.total_loss = (self.bbox_loss + self.iou_loss +
-                               self.cls_loss) / self.num_boxes_batch_ph
+            self.total_loss = self.bbox_loss + self.iou_loss + self.cls_loss
 
             # network's optimizer
             self.global_step = tf.Variable(
@@ -168,14 +164,15 @@ class Network:
     def train(self, batch_images, batch_boxes, batch_classes, anchors, num_boxes_batch):
         assert self.is_training
 
-        step, _, loss = self.sess.run([self.global_step, self.optimizer, self.total_loss],
-                                      feed_dict={self.images_ph: batch_images,
-                                                 self.boxes_ph: batch_boxes,
-                                                 self.classes_ph: batch_classes,
-                                                 self.anchors_ph: anchors,
-                                                 self.num_boxes_batch_ph: num_boxes_batch})
+        step, _, bbox_loss, iou_loss, cls_loss = self.sess.run([self.global_step, self.optimizer,
+                                                                self.bbox_loss, self.iou_loss, self.cls_loss],
+                                                               feed_dict={self.images_ph: batch_images,
+                                                                          self.boxes_ph: batch_boxes,
+                                                                          self.classes_ph: batch_classes,
+                                                                          self.anchors_ph: anchors,
+                                                                          self.num_boxes_batch_ph: num_boxes_batch})
 
-        return step, loss
+        return step, bbox_loss, iou_loss, cls_loss
 
     def save_ckpt(self, step):
         self.saver.save(self.sess,

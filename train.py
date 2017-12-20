@@ -39,6 +39,10 @@ blob = BlobLoader(anno_dir=train_anno_dir,
 num_iters = blob.num_anno // args.batch
 step = 0
 
+# losses collection contain dict of losses from network
+# {'step', 'bbox_loss', 'iou_loss', 'cls_loss', 'total_loss'}
+losses_collection = []
+
 print('start training')
 for epoch in range(1, args.epochs + 1):
     iter = 0
@@ -47,13 +51,24 @@ for epoch in range(1, args.epochs + 1):
     for batch_images, batch_boxes, batch_classes, num_boxes_batch in blob.next_batch():
         iter += 1
 
-        step, loss = net.train(batch_images, batch_boxes,
-                               batch_classes, anchors, num_boxes_batch)
+        step, bbox_loss, iou_loss, cls_loss = net.train(batch_images, batch_boxes,
+                                                        batch_classes, anchors, num_boxes_batch)
 
         if step % 100 == 0 or iter == num_iters:
-            print('epoch: {0:03} - step: {1:06} - total_loss: {2}'
-                  .format(epoch, step, loss))
+            total_loss = bbox_loss + iou_loss + cls_loss
+
+            # add to collection
+            losses_collection.append({'step': step, 'bbox_loss': bbox_loss,
+                                      'iou_loss': iou_loss, 'cls_loss': cls_loss, 'total_loss': total_loss})
+
+            print('epoch: {0:03} - step: {1:06} - bbox_loss: {2} - iou_loss: {3} - cls_loss: {4}'
+                  .format(epoch, step, bbox_loss, iou_loss, cls_loss))
 
     if epoch % 10 == 0 or epoch == args.epochs:
         net.save_ckpt(step)
 print('training done')
+
+# dumpt losses_collection to file
+import json
+with open('./logs/losses_collection.json', 'w') as fout:
+    json.dump(losses_collection, fout)

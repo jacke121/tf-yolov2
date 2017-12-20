@@ -8,5 +8,5 @@ def nms(dets, thresh, force_cpu=False):
         return []
     if force_cpu:
         return cpu_nms(dets, thresh)
-
-    return gpu_nms(dets, thresh)
+    else:
+        return gpu_nms(dets, thresh)
