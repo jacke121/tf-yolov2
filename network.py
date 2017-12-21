@@ -141,7 +141,7 @@ class Network:
                         from tensorflow.python.pywrap_tensorflow import NewCheckpointReader
 
                         reader = NewCheckpointReader(vgg_16_ckpt)
-                        # only restored conv's weights
+                        # only restoring conv's weights
                         restored_var_names = [name + ':0'
                                               for name in reader.get_variable_to_dtype_map().keys()
                                               if re.match('^.*conv.*weights$', name)]
@@ -150,9 +150,11 @@ class Network:
                         restored_vars = [var for var in global_vars
                                          if var.name in restored_var_names]
 
+                        # update restored variables' name
                         restored_var_names = [var.name[:-2]
                                               for var in restored_vars]
 
+                        # assignment variables
                         value_ph = tf.placeholder(tf.float32, shape=None)
                         for i in range(len(restored_var_names)):
                             self.sess.run(tf.assign(restored_vars[i], value_ph),

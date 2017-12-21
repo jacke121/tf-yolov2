@@ -11,7 +11,7 @@ from utils.anchors import get_anchors
 slim = tf.contrib.slim
 
 # ie. Annotations and JPEGImages in pascal/voc
-train_anno_dir = os.path.join(cfg.data_dir, 'annotation_val')
+train_anno_dir = os.path.join(cfg.data_dir, 'annotation')
 train_images_dir = os.path.join(cfg.data_dir, 'images')
 
 # add gpu/cpu options??

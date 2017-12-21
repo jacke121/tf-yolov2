@@ -1,5 +1,6 @@
 # https://github.com/tensorflow/models/blob/master/research/slim/nets/resnet_utils.py
 # atrous convolution is dilated convolution
+# no definition for resnet 18 and 34 layers because of no pretrained models in tf-slim
 from __future__ import absolute_import, division, print_function
 import tensorflow as tf
 
@@ -94,25 +95,61 @@ def bottleneck(inputs, depth, depth_bottleneck, stride, scope=None):
     return output
 
 
-def resnet_block(inputs, base_depth, num_units, stride, scope=None):
-    """Helper function for creating a resnet_v2 bottleneck block.
+def basic(inputs, depth, depth_bottleneck, stride, scope=None):
+    # using for resnet-18/34 and wide-resnet
+    """Basic residual unit variant with BN before convolutions.
+    Args:
+    inputs: A tensor of size [batch, height, width, channels].
+    depth: The depth of the ResNet unit output.
+    [DEPRECATED] depth_bottleneck: The depth of the bottleneck layers.
+    stride: The ResNet unit's stride. Determines the amount of downsampling of
+      the units output compared to its input.
+    scope: Optional variable_scope.
+    Returns:
+        The ResNet unit's output.
+    """
+    with tf.variable_scope(scope, 'basic', [inputs]):
+        depth_in = slim.utils.last_dimension(inputs.get_shape())
+        preact = slim.batch_norm(
+            inputs, activation_fn=tf.nn.relu, scope='preact')
+        if depth == depth_in:
+            shortcut = subsample(inputs, stride, 'shortcut')
+        else:
+            shortcut = slim.conv2d(preact, depth, [1, 1], stride=stride,
+                                   normalizer_fn=None, activation_fn=None, scope='shortcut')
+
+        residual = slim.conv2d(preact, depth, [3, 3], stride=1,
+                               scope='conv1')
+
+        residual = slim.conv2d(residual, depth, [3, 3], stride=stride,
+                               scope='conv2')
+
+        output = residual + shortcut
+
+    return output
+
+
+def resnet_block(inputs, depth, num_units, stride, btn=True, scope=None):
+    """Helper function for creating a resnet_v2 block.
     Args:
         inputs: A tensor of size [batch, height, width, channels].
-        base_depth: The depth of the bottleneck layer for each unit.
+        depth: The depth of layer for each unit.
         num_units: The number of units in the block.
         stride: The stride of the block, implemented as a stride in the last unit.
           All other units have stride=1.
+        btn: Whether using bottleneck or basic
         scope: The scope of the block.
     Returns:
-        A resnet_v2 bottleneck block.
+        A resnet_v2 block.
     """
-    depth = base_depth * 4
+    base_depth = depth // 4
+    feed = bottleneck if btn else basic
 
     with tf.variable_scope(scope, 'block', [inputs]):
-        net = bottleneck(inputs, depth, base_depth,
-                          stride=stride)  # first block
+        net = feed(inputs, depth, base_depth,
+                   stride=stride)  # first block
 
-        net = slim.repeat(net, num_units - 1, bottleneck,
+        net = slim.repeat(net, num_units - 1, feed,
                           depth, base_depth, stride=1)  # rest blocks
 
     return net
