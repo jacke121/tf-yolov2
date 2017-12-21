@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
 import argparse
 import os
+import time
+from datetime import timedelta
 import numpy as np
 import tensorflow as tf
 import config as cfg
@@ -11,7 +13,7 @@ from utils.anchors import get_anchors
 slim = tf.contrib.slim
 
 # ie. Annotations and JPEGImages in pascal/voc
-train_anno_dir = os.path.join(cfg.data_dir, 'annotation')
+train_anno_dir = os.path.join(cfg.data_dir, 'annotation_val')
 train_images_dir = os.path.join(cfg.data_dir, 'images')
 
 # add gpu/cpu options??
@@ -19,17 +21,17 @@ train_images_dir = os.path.join(cfg.data_dir, 'images')
 parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', type=int, default=50)  # num training epochs
 parser.add_argument('--batch', type=int, default=4)  # num images per batch
-parser.add_argument('--lr', type=float, default=1e-3)  # learning rate
+parser.add_argument('--lr', type=float, default=1e-5)  # learning rate
 args = parser.parse_args()
 
 # tf configuration
 tfcfg = tf.ConfigProto()
-tfcfg.gpu_options.allow_growth = True
-tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.6
+# tfcfg.gpu_options.allow_growth = True
+# tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.6
 tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
 net = Network(session=tf.Session(config=tfcfg), is_training=True,
-              lr=args.lr, adamop=False, pretrained=True)
+              lr=args.lr, adamop=True, pretrained=True)
 
 # load anchors and data
 print('loading anchors and dataset')
@@ -46,6 +48,7 @@ losses_collection = []
 print('start training')
 for epoch in range(1, args.epochs + 1):
     iter = 0
+    start_t = time.time()
 
     # double images per batch with left-right flipping
     for batch_images, batch_boxes, batch_classes, num_boxes_batch in blob.next_batch():
@@ -66,6 +69,10 @@ for epoch in range(1, args.epochs + 1):
 
     if epoch % 10 == 0 or epoch == args.epochs:
         net.save_ckpt(step)
+
+    print('epoch: {0:03} - time: '.format(epoch) +
+          str(timedelta(seconds=time.time() - start_t)))
+
 print('training done')
 
 # dumpt losses_collection to file

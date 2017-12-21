@@ -8,6 +8,7 @@ model = 'detrac'
 
 # working directories
 # pascal/voc
+# data_dir = '/home/dattr/data/pascal'
 
 # detrac
 data_dir = '/home/dattr/data/detrac'

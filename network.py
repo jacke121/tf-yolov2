@@ -47,7 +47,7 @@ def forward(inputs, num_outputs, scope=None):
 
 
 class Network:
-    def __init__(self, session, is_training=True, lr=1e-3, adamop=False, pretrained=False):
+    def __init__(self, session, is_training=True, lr=1e-5, adamop=False, pretrained=False):
         self.sess = session
         self.is_training = is_training
 

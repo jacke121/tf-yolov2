@@ -22,7 +22,7 @@ def clip_boxes(boxes, im_shape):
     return boxes
 
 
-def nms_detections(boxes_pred, scores, nms_thresh, force_cpu):
+def nms_detections(boxes_pred, scores, nms_thresh, force_cpu=False):
     dets = np.hstack((boxes_pred, scores[:, np.newaxis])).astype(np.float32)
 
     return nms(dets, nms_thresh, force_cpu)

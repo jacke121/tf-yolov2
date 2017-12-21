@@ -12,7 +12,7 @@ using numpy's axis (not pascal/voc's axis): (ymin,xmin) = (xmin,ymin) and (ymax,
   
 network using VGG16 pretrained model (removed fc layers) from tf-slim with adding 2 conv layers (conv6, logits). VGG16 put in model/
   
-command:  python3 train.py --epochs NUM_EPOCHS --batch NUM_IMAGES --lr LEARN_RATE
+python3 train.py --epochs NUM_EPOCHS --batch NUM_IMAGES --lr LEARN_RATE
   
 (batch 2*NUM_IMAGES with left-right flipping)
   
@@ -25,5 +25,7 @@ edit adamop to use AdamOptimizer instead of SGD with momentum (default) and pret
 ## demo:
 
 ## todo:
+fixed out of GPU's memory while training, exhausted with tf.ConfigProto GPU options  
 evaluate model and visualization with matplotlib  
 using compute targets (groundtruth and mask) with cython to improve training speed
+using postprocess with cython to improve speed    

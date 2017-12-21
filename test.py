@@ -7,7 +7,7 @@ import cv2
 import tensorflow as tf
 import config as cfg
 from network import Network
-from postprocess import postprocess, draw_targets
+from py_postprocess import postprocess, draw_targets
 from utils.anchors import get_anchors
 
 slim = tf.contrib.slim
