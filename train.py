@@ -12,26 +12,24 @@ from utils.anchors import get_anchors
 
 slim = tf.contrib.slim
 
-# ie. Annotations and JPEGImages in pascal/voc
 train_anno_dir = os.path.join(cfg.data_dir, 'annotation_val')
 train_images_dir = os.path.join(cfg.data_dir, 'images')
 
-# add gpu/cpu options??
-# 2*batch_size images per batch with left-right flipping
 parser = argparse.ArgumentParser()
-parser.add_argument('--epochs', type=int, default=50)  # num training epochs
-parser.add_argument('--batch', type=int, default=4)  # num images per batch
-parser.add_argument('--lr', type=float, default=1e-5)  # learning rate
+parser.add_argument('--epochs', type=int, default=15)
+parser.add_argument('--batch', type=int, default=1)
+parser.add_argument('--lr', type=float, default=1e-3)
 args = parser.parse_args()
+
+print('epochs: {0} - batch: {1} - learn_rate: {2}'.format(args.epochs,
+                                                          args.batch, args.lr))
 
 # tf configuration
 tfcfg = tf.ConfigProto()
-# tfcfg.gpu_options.allow_growth = True
-# tfcfg.gpu_options.per_process_gpu_memory_fraction = 0.6
 tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
-net = Network(session=tf.Session(config=tfcfg), is_training=True,
-              lr=args.lr, adamop=True, pretrained=True)
+# net = Network(session=tf.Session(config=tfcfg), is_training=True,
+#               lr=args.lr, adamop=True, pretrained=True)
 
 # load anchors and data
 print('loading anchors and dataset')
@@ -40,6 +38,7 @@ blob = BlobLoader(anno_dir=train_anno_dir,
                   images_dir=train_images_dir, batch_size=args.batch)
 num_iters = blob.num_anno // args.batch
 step = 0
+train_t = 0
 
 # losses collection contain dict of losses from network
 # {'step', 'bbox_loss', 'iou_loss', 'cls_loss', 'total_loss'}
@@ -61,21 +60,23 @@ for epoch in range(1, args.epochs + 1):
             total_loss = bbox_loss + iou_loss + cls_loss
 
             # add to collection
-            losses_collection.append({'step': step, 'bbox_loss': bbox_loss,
-                                      'iou_loss': iou_loss, 'cls_loss': cls_loss, 'total_loss': total_loss})
+            losses_collection.append(
+                (step, bbox_loss, iou_loss, cls_loss, total_loss))
 
-            print('epoch: {0:03} - step: {1:06} - bbox_loss: {2} - iou_loss: {3} - cls_loss: {4}'
+            print('epoch: {0:03} - step: {1:07} - bbox_loss: {2} - iou_loss: {3} - cls_loss: {4}'
                   .format(epoch, step, bbox_loss, iou_loss, cls_loss))
 
-    if epoch % 10 == 0 or epoch == args.epochs:
-        net.save_ckpt(step)
+    time_dif = np.round(time.time() - start_t)
+    train_t += time_dif
 
     print('epoch: {0:03} - time: '.format(epoch) +
-          str(timedelta(seconds=time.time() - start_t)))
+          str(timedelta(seconds=time_dif)))
 
-print('training done')
+    if epoch % 3 == 0 or epoch == args.epochs:
+        net.save_ckpt(step)
+
+print('training done - time: ' + str(timedelta(seconds=train_t)))
 
 # dumpt losses_collection to file
-import json
-with open('./logs/losses_collection.json', 'w') as fout:
-    json.dump(losses_collection, fout)
+losses_collection = np.asarray(losses_collection, dtype=np.float32)
+np.savetxt('./logs/losses_collection.txt', losses_collection, fmt='%.6e')

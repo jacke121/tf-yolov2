@@ -38,23 +38,17 @@ def prep_image(anno_dir, images_dir, xml):
     classes = np.array(classes, dtype=np.int8)
 
     image = cv2.imread(os.path.join(cfg.data_dir, images_dir, image_name))
+    # cv2 using BGR channels for imread, convert to RGB and subtract VGG_MEAN
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) - [123.68, 116.78, 103.94]
     image = cv2.resize(image, (cfg.inp_size, cfg.inp_size))
-    # image /= 255.0
+
+    # if np.random.randint(0, 2):  # randomly left-right flipping
+    #     image = cv2.flip(image, 1)
+    #     boxes[:, 1::2] = cfg.inp_size - boxes[:, 1::2]
 
     return image, boxes, classes
 
 
-# data augmentation
-def lr_flip(image, boxes):
-    flip_image = cv2.flip(image, 1)
-
-    flip_boxes = np.copy(boxes)
-    flip_boxes[:, 1::2] = image.shape[1] - flip_boxes[:, 1::2]
-
-    return flip_image, flip_boxes
-
-
-# data generator
 class BlobLoader:
     def __init__(self, anno_dir, images_dir, batch_size=1):
         self.anno_dir = anno_dir
@@ -65,7 +59,6 @@ class BlobLoader:
         self.start_idx = 0
 
     def next_batch(self):
-        # yield 2*batch_size images with left-right flipping
         np.random.shuffle(self.anno)
 
         while True:
@@ -79,10 +72,6 @@ class BlobLoader:
                     self.anno_dir, self.images_dir, xml)
                 batch_images.append(image)
                 batch_boxes.append(boxes)
-                batch_classes.append(classes)
-                flip_image, flip_boxes = lr_flip(image, boxes)
-                batch_images.append(flip_image)
-                batch_boxes.append(flip_boxes)
                 batch_classes.append(classes)
 
             self.start_idx = end_idx if end_idx < self.num_anno else 0
@@ -103,12 +92,6 @@ class BlobLoader:
                 num_boxes_im = len(batch_classes[i])
                 batch_boxes_pad[i, 0:num_boxes_im, :] = batch_boxes[i]
                 batch_classes_pad[i, 0:num_boxes_im] = batch_classes[i]
-
-            # shuffle images in batch
-            inds = np.random.permutation(self.batch_size * 2)
-            batch_images = batch_images[inds]
-            batch_boxes_pad = batch_boxes_pad[inds]
-            batch_classes_pad = batch_classes_pad[inds]
 
             yield batch_images, batch_boxes_pad, batch_classes_pad, num_boxes_batch
 

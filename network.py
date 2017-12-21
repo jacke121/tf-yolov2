@@ -27,15 +27,15 @@ def forward(inputs, num_outputs, scope=None):
                               [3, 3], scope='conv2')
             net = slim.max_pool2d(net, [2, 2], scope='pool2')
 
-            net = slim.repeat(net, 3, slim.conv2d, 256,
+            net = slim.repeat(net, 2, slim.conv2d, 256,
                               [3, 3], scope='conv3')
             net = slim.max_pool2d(net, [2, 2], scope='pool3')
 
-            net = slim.repeat(net, 3, slim.conv2d, 512,
+            net = slim.repeat(net, 2, slim.conv2d, 512,
                               [3, 3], scope='conv4')
             net = slim.max_pool2d(net, [2, 2], scope='pool4')
 
-            net = slim.repeat(net, 3, slim.conv2d, 512,
+            net = slim.repeat(net, 2, slim.conv2d, 512,
                               [3, 3], scope='conv5')
             net = slim.max_pool2d(net, [2, 2], scope='pool5')
 
@@ -47,7 +47,7 @@ def forward(inputs, num_outputs, scope=None):
 
 
 class Network:
-    def __init__(self, session, is_training=True, lr=1e-5, adamop=False, pretrained=False):
+    def __init__(self, session, is_training=True, lr=1e-3, adamop=False, pretrained=False):
         self.sess = session
         self.is_training = is_training
 
@@ -166,8 +166,9 @@ class Network:
     def train(self, batch_images, batch_boxes, batch_classes, anchors, num_boxes_batch):
         assert self.is_training
 
-        step, _, bbox_loss, iou_loss, cls_loss = self.sess.run([self.global_step, self.optimizer,
-                                                                self.bbox_loss, self.iou_loss, self.cls_loss],
+        step, bbox_loss, iou_loss, cls_loss, _ = self.sess.run([self.global_step,
+                                                                self.bbox_loss, self.iou_loss, self.cls_loss,
+                                                                self.optimizer],
                                                                feed_dict={self.images_ph: batch_images,
                                                                           self.boxes_ph: batch_boxes,
                                                                           self.classes_ph: batch_classes,

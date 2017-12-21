@@ -61,10 +61,9 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
         _cls[cell_ind, a, gt_classes[i]] = 1
         _cls_mask[cell_ind, a, :] = cfg.cls_scale
 
-        _iou_truth = box_ious[cell_ind, a, i]
-        _iou[cell_ind, a, :] = _iou_truth
+        _iou[cell_ind, a, :] = box_ious[cell_ind, a, i]
         _iou_mask[cell_ind, a, :] = cfg.object_scale * \
-            (_iou_truth - iou_pred[cell_ind, a, :])
+            (1 - iou_pred[cell_ind, a, :])
 
         target_boxes[i, 2:4] /= anchors[a]
         _bbox[cell_ind, a, :] = target_boxes[i]
