@@ -8,7 +8,6 @@ import tensorflow as tf
 import config as cfg
 from network import Network
 from py_postprocess import postprocess, draw_targets
-from utils.anchors import get_anchors
 
 slim = tf.contrib.slim
 
@@ -20,9 +19,11 @@ net = Network(session=tf.Session(config=tfcfg), is_training=False)
 image_name = '01.jpg'
 image = cv2.imread(os.path.join(cfg.workspace, 'test', image_name))
 
-scaled_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) - [123.68, 116.78, 103.94]
-scaled_image = cv2.resize(scaled_image, (cfg.inp_size, cfg.inp_size))
-anchors = get_anchors(target_size=(cfg.inp_size, cfg.inp_size))
+tsize = 416
+scaled_image = cv2.cvtColor(
+    image, cv2.COLOR_BGR2RGB) - [123.68, 116.78, 103.94]
+scaled_image = cv2.resize(scaled_image, (tsize, tsize))
+anchors = cfg.anchors * tsize
 
 start_t = time.time()
 
