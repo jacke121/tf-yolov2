@@ -4,7 +4,9 @@ import config as cfg
 from utils.bbox import box_overlaps, anchor_overlaps
 
 
-def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors, im_shape):
+def compute_targets(im_shape, ft_shape,
+                    box_pred, iou_pred,
+                    gt_boxes, gt_classes, anchors):
     # remove dontcare boxes (cls -1) from groundtruth
     box_inds = np.where(gt_classes >= 0)[0]
     gt_boxes = gt_boxes[box_inds]
@@ -21,7 +23,7 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors, im_
 
     # scale box_pred to im_shape
     box_pred = np.reshape(box_pred, [-1, 4])
-    box_pred[:, 0::2] *= in_shape[0]
+    box_pred[:, 0::2] *= im_shape[0]
     box_pred[:, 1::2] *= im_shape[1]
 
     box_ious = box_overlaps(np.ascontiguousarray(box_pred, dtype=np.float32),
@@ -32,14 +34,14 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors, im_
     _iou_mask[neg_boxpred_inds] = cfg.noobject_scale * \
         (0 - iou_pred[neg_boxpred_inds])
 
-    # scale gt_boxes to out_size
-    gt_boxes[:, 0::2] *= (h / im_shape[0])
-    gt_boxes[:, 1::2] *= (w / im_shape[1])
+    # scale gt_boxes to ft_shape
+    gt_boxes[:, 0::2] *= (ft_shape[0] / im_shape[0])
+    gt_boxes[:, 1::2] *= (ft_shape[1] / im_shape[1])
 
     # locate gt_boxes' cells
     cx = (gt_boxes[:, 0] + gt_boxes[:, 2]) / 2
     cy = (gt_boxes[:, 1] + gt_boxes[:, 3]) / 2
-    cell_inds = np.floor(cx) * w + np.floor(cy)
+    cell_inds = np.floor(cx) * ft_shape[1] + np.floor(cy)
     cell_inds = cell_inds.astype(np.int)
 
     # compute target boxes for regression
@@ -63,7 +65,8 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors, im_
         _cls[cell_ind, a, gt_classes[i]] = 1
         _cls_mask[cell_ind, a, :] = cfg.cls_scale
 
-        _iou[cell_ind, a, :] = box_ious[cell_ind, a, i]
+        _iou_truth = box_ious[cell_ind, a, i]
+        _iou[cell_ind, a, :] = _iou_truth
         _iou_mask[cell_ind, a, :] = cfg.object_scale * \
             (1 - iou_pred[cell_ind, a, :])
 
@@ -74,9 +77,13 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors, im_
     return _cls, _cls_mask, _iou, _iou_mask, _bbox, _bbox_mask
 
 
-def compute_targets_batch(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors, im_shape):
-    targets = [compute_targets(h, w, box_pred[b], iou_pred[b], gt_boxes[b],
-                               gt_classes[b], anchors, im_shape) for b in range(box_pred.shape[0])]
+def compute_targets_batch(im_shape, ft_shape,
+                          box_pred, iou_pred,
+                          gt_boxes, gt_classes, anchors):
+
+    targets = [compute_targets(im_shape, ft_shape,
+                               box_pred[b], iou_pred[b],
+                               gt_boxes[b], gt_classes[b], anchors) for b in range(box_pred.shape[0])]
 
     _cls = np.stack(target[0] for target in targets)
     _cls_mask = np.stack(target[1] for target in targets)

@@ -14,16 +14,17 @@ slim = tf.contrib.slim
 tfcfg = tf.ConfigProto()
 tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_1
 
-net = Network(session=tf.Session(config=tfcfg), is_training=False)
+net = Network(session=tf.Session(config=tfcfg),
+              im_shape=cfg.inp_size, is_training=False)
 
 image_name = '01.jpg'
 image = cv2.imread(os.path.join(cfg.workspace, 'test', image_name))
 
-tsize = 416
 scaled_image = cv2.cvtColor(
     image, cv2.COLOR_BGR2RGB) - [123.68, 116.78, 103.94]
-scaled_image = cv2.resize(scaled_image, (tsize, tsize))
-anchors = cfg.anchors * tsize
+scaled_image = cv2.resize(scaled_image, cfg.inp_size)
+
+anchors = np.round(cfg.anchors * cfg.inp_size / 416, 2)
 
 start_t = time.time()
 

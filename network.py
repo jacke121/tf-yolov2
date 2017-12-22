@@ -47,12 +47,13 @@ def forward(inputs, num_outputs, scope=None):
 
 
 class Network:
-    def __init__(self, session, is_training=True, lr=1e-3, adamop=False, pretrained=False):
+    def __init__(self, session, im_shape, is_training=True, lr=1e-3, adamop=False, pretrained=False):
         self.sess = session
         self.is_training = is_training
 
         # network's placeholders
-        self.images_ph = tf.placeholder(tf.float32, shape=None)
+        self.images_ph = tf.placeholder(
+            tf.float32, shape=[None, im_shape[0], im_shape[1], 3])
 
         self.anchors_ph = tf.placeholder(
             tf.float32, shape=[cfg.num_anchors, 2])
@@ -62,16 +63,17 @@ class Network:
                          num_outputs=cfg.num_anchors * (cfg.num_classes + 5),
                          scope='vgg_16')
 
-        h, w = logits.get_shape().as_list()[1:3]
+        ft_shape = logits.get_shape().as_list()[1:3]
 
         logits = tf.reshape(logits,
-                            [-1, h * w, cfg.num_anchors, cfg.num_classes + 5])
+                            [-1, ft_shape[0] * ft_shape[1], cfg.num_anchors, cfg.num_classes + 5])
 
         bbox_pred = tf.concat([tf.sigmoid(logits[:, :, :, 0:2]), tf.exp(logits[:, :, :, 2:4])],
                               axis=3)
 
         self.box_pred = tf.py_func(bbox_transform,
-                                   [bbox_pred, self.anchors_ph, h, w],
+                                   [bbox_pred, self.anchors_ph,
+                                       ft_shape[0], ft_shape[1]],
                                    tf.float32, name='box_pred')
 
         self.iou_pred = tf.sigmoid(logits[:, :, :, 4:5])
@@ -84,15 +86,12 @@ class Network:
 
             self.classes_ph = tf.placeholder(tf.int8, shape=None)
 
-            self.im_shape_ph = tf.placeholder(tf.float32, shape=None)
-
             self.num_boxes_batch_ph = tf.placeholder(tf.float32, shape=None)
 
             _cls, _cls_mask, _iou, _iou_mask, _bbox, _bbox_mask = tf.py_func(compute_targets_batch,
-                                                                             [h, w,
+                                                                             [im_shape, ft_shape,
                                                                               self.box_pred, self.iou_pred,
-                                                                              self.boxes_ph, self.classes_ph,
-                                                                              self.anchors_ph, self.im_shape_ph],
+                                                                              self.boxes_ph, self.classes_ph, self.anchors_ph],
                                                                              [tf.float32] * 6, name='targets')
 
             # network's losses, focal loss on cls?
@@ -112,7 +111,7 @@ class Network:
             if adamop:  # using Adam
                 self.optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(
                     loss=self.total_loss, global_step=self.global_step)
-            else:  # using SGD with momentum
+            else:  # using SGD with momentum, not good
                 self.optimizer = tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9).minimize(
                     loss=self.total_loss, global_step=self.global_step)
 
@@ -166,7 +165,7 @@ class Network:
                 initialized_vars = list(set(global_vars) - set(restored_vars))
                 self.sess.run(tf.variables_initializer(initialized_vars))
 
-    def train(self, batch_images, batch_boxes, batch_classes, anchors, num_boxes_batch, im_shape):
+    def train(self, batch_images, batch_boxes, batch_classes, anchors, num_boxes_batch):
         assert self.is_training
 
         step, bbox_loss, iou_loss, cls_loss, _ = self.sess.run([self.global_step,
@@ -176,8 +175,7 @@ class Network:
                                                                           self.boxes_ph: batch_boxes,
                                                                           self.classes_ph: batch_classes,
                                                                           self.anchors_ph: anchors,
-                                                                          self.num_boxes_batch_ph: num_boxes_batch,
-                                                                          self.im_shape_ph: im_shape})
+                                                                          self.num_boxes_batch_ph: num_boxes_batch})
 
         return step, bbox_loss, iou_loss, cls_loss
 
@@ -197,4 +195,5 @@ class Network:
 
 
 if __name__ == '__main__':
-    Network(tf.Session(), pretrained=True)  # trying to init network
+    Network(tf.Session(), im_shape=cfg.inp_size,
+            pretrained=True)  # trying to init network

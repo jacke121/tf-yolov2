@@ -50,18 +50,17 @@ def prep_image(anno_dir, images_dir, xml, target_size):
 
 
 class BlobLoader:
-    def __init__(self, anno_dir, images_dir, batch_size, rescale_step):
+    def __init__(self, anno_dir, images_dir, batch_size, target_size):
         self.anno_dir = anno_dir
         self.images_dir = images_dir
         self.anno = os.listdir(os.path.join(cfg.data_dir, anno_dir))
         self.num_anno = len(self.anno)
         self.batch_size = batch_size
-        self.rescale_step = rescale_step
+        self.target_size = target_size
         self.start_idx = 0
 
     def next_batch(self):
         np.random.shuffle(self.anno)
-        tsize = np.random.choice(cfg.inp_size, 1)
 
         while True:
             batch_images = []
@@ -71,7 +70,7 @@ class BlobLoader:
             end_idx = min(self.start_idx + self.batch_size, self.num_anno)
             for xml in self.anno[self.start_idx:end_idx]:
                 image, boxes, classes = prep_image(
-                    self.anno_dir, self.images_dir, xml, (tsize, tsize))
+                    self.anno_dir, self.images_dir, xml, self.target_size)
                 batch_images.append(image)
                 batch_boxes.append(boxes)
                 batch_classes.append(classes)
@@ -108,6 +107,3 @@ class BlobLoader:
             # complete epoch
             if self.start_idx == 0:
                 break
-
-            if self.start_idx % (self.rescale_step * self.batch_size) == 0:
-                tsize = np.random.choice(cfg.inp_size, 1)

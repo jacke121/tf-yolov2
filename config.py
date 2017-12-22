@@ -19,8 +19,8 @@ if not os.path.exists(ckpt_dir):
     os.makedirs(ckpt_dir)
 
 # todo: various shapes (inp_h != inp_w)
-inp_size = [384, 416, 448, 480, 512]
-num_anchors = 5
+# inp_size = [384, 416, 448, 480, 512]
+inp_size = (416, 416)
 
 # object labels and class colors
 # pascal/voc labels
@@ -46,5 +46,7 @@ noobject_scale = 1
 box_scale = 1
 
 # anchors with (height, width) order
-anchors = np.asarray([(1.19, 1.08), (4.41, 3.42), (11.38, 6.63),
-                      (5.11, 9.42), (10.52, 16.62)], dtype=np.float32) / 416
+anchors = np.array([(1.19, 1.08), (4.41, 3.42), (11.38, 6.63),
+                    (5.11, 9.42), (10.52, 16.62)], dtype=np.float32)
+
+num_anchors = len(anchors)
