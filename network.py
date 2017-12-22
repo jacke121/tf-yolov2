@@ -7,43 +7,21 @@ from utils.bbox import bbox_transform
 
 slim = tf.contrib.slim
 
+# from nets.vgg import forward
+# premodel = {
+#     'endp': 'vgg_16',
+#     'ckpt': 'model/vgg_16.ckpt',
+#     'path': 'model/vgg_16.ckpt',
+#     'rptn': '^.*conv.*weights$'
+# }
 
-def leaky(features, name=None):
-    return tf.nn.leaky_relu(features, alpha=0.1, name=name)
-
-
-# network's feed-forward used from nets/
-def forward(inputs, num_outputs, scope=None):
-    with tf.variable_scope(scope, 'net', [inputs], reuse=tf.AUTO_REUSE):
-        with slim.arg_scope([slim.conv2d],
-                            activation_fn=tf.nn.relu,
-                            normalizer_fn=slim.batch_norm,
-                            weights_initializer=tf.contrib.layers.xavier_initializer(uniform=True)):
-            net = slim.repeat(inputs, 2, slim.conv2d, 64,
-                              [3, 3], scope='conv1')
-            net = slim.max_pool2d(net, [2, 2], scope='pool1')
-
-            net = slim.repeat(net, 2, slim.conv2d, 128,
-                              [3, 3], scope='conv2')
-            net = slim.max_pool2d(net, [2, 2], scope='pool2')
-
-            net = slim.repeat(net, 2, slim.conv2d, 256,
-                              [3, 3], scope='conv3')
-            net = slim.max_pool2d(net, [2, 2], scope='pool3')
-
-            net = slim.repeat(net, 2, slim.conv2d, 512,
-                              [3, 3], scope='conv4')
-            net = slim.max_pool2d(net, [2, 2], scope='pool4')
-
-            net = slim.repeat(net, 2, slim.conv2d, 512,
-                              [3, 3], scope='conv5')
-            net = slim.max_pool2d(net, [2, 2], scope='pool5')
-
-            net = slim.conv2d(net, 512, [3, 3], scope='conv6')
-            net = slim.conv2d(net, num_outputs, [1, 1],
-                              activation_fn=None, normalizer_fn=None, scope='logits')
-
-    return net
+from nets.mobilenet import forward
+premodel = {
+    'endp': 'MobilenetV1',
+    'ckpt': 'model/mobilenet_v1_1.0_224.ckpt',
+    'path': 'model/mobilenet_v1_1.0_224.ckpt.meta',
+    'rptn': '^.*Conv.*weights$'
+}
 
 
 class Network:
@@ -58,10 +36,9 @@ class Network:
         self.anchors_ph = tf.placeholder(
             tf.float32, shape=[cfg.num_anchors, 2])
 
-        # compute targets
         logits = forward(self.images_ph,
                          num_outputs=cfg.num_anchors * (cfg.num_classes + 5),
-                         scope='vgg_16')
+                         scope=premodel['endp'])
 
         ft_shape = logits.get_shape().as_list()[1:3]
 
@@ -111,8 +88,9 @@ class Network:
             if adamop:  # using Adam
                 self.optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(
                     loss=self.total_loss, global_step=self.global_step)
-            else:  # using SGD with momentum, not good
-                self.optimizer = tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9).minimize(
+            else:  # using SGD_momentum + nesterov
+                # poor performance with small batch_size (<=10)
+                self.optimizer = tf.train.MomentumOptimizer(learning_rate=lr, momentum=0.9, use_nesterov=True).minimize(
                     loss=self.total_loss, global_step=self.global_step)
 
         self.saver = tf.train.Saver(max_to_keep=3)
@@ -133,22 +111,22 @@ class Network:
                 restored_vars = []
                 global_vars = tf.global_variables()
 
-                if pretrained:  # restore from tf slim vgg16 model
-                    vgg_16_ckpt = os.path.join(
-                        cfg.workspace, 'model/vgg_16.ckpt')
-                    if os.path.exists(vgg_16_ckpt):
-                        print('from model/vgg_16.ckpt')
+                if pretrained:  # restore from tf-slim model
+                    if os.path.exists(os.path.join(cfg.workspace, premodel['path'])):
+                        print('from ' + premodel['endp'])
 
                         import re
                         from tensorflow.python.pywrap_tensorflow import NewCheckpointReader
 
-                        reader = NewCheckpointReader(vgg_16_ckpt)
+                        reader = NewCheckpointReader(
+                            os.path.join(cfg.workspace, premodel['ckpt']))
+
                         # only restoring conv's weights
                         restored_var_names = [name + ':0'
                                               for name in reader.get_variable_to_dtype_map().keys()
-                                              if re.match('^.*conv.*weights$', name)]
+                                              if re.match(premodel['rptn'], name)]
 
-                        # update restored variables from pretrained vgg16 model
+                        # update restored variables from pretrained model
                         restored_vars = [var for var in global_vars
                                          if var.name in restored_var_names]
 
