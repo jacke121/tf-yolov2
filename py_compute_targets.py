@@ -4,7 +4,7 @@ import config as cfg
 from utils.bbox import box_overlaps, anchor_overlaps
 
 
-def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
+def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors, im_shape):
     # remove dontcare boxes (cls -1) from groundtruth
     box_inds = np.where(gt_classes >= 0)[0]
     gt_boxes = gt_boxes[box_inds]
@@ -19,8 +19,10 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
     _bbox = np.zeros((hw, num_anchors, 4), dtype=np.float32)
     _bbox_mask = np.zeros((hw, num_anchors, 1), dtype=np.float32)
 
-    # scale box_pred to inp_size
-    box_pred = np.reshape(box_pred, [-1, 4]) * cfg.inp_size
+    # scale box_pred to im_shape
+    box_pred = np.reshape(box_pred, [-1, 4])
+    box_pred[:, 0::2] *= in_shape[0]
+    box_pred[:, 1::2] *= im_shape[1]
 
     box_ious = box_overlaps(np.ascontiguousarray(box_pred, dtype=np.float32),
                             np.ascontiguousarray(gt_boxes, dtype=np.float32))
@@ -31,8 +33,8 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
         (0 - iou_pred[neg_boxpred_inds])
 
     # scale gt_boxes to out_size
-    gt_boxes[:, 0::2] *= (h / cfg.inp_size)
-    gt_boxes[:, 1::2] *= (w / cfg.inp_size)
+    gt_boxes[:, 0::2] *= (h / im_shape[0])
+    gt_boxes[:, 1::2] *= (w / im_shape[1])
 
     # locate gt_boxes' cells
     cx = (gt_boxes[:, 0] + gt_boxes[:, 2]) / 2
@@ -72,9 +74,9 @@ def compute_targets(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
     return _cls, _cls_mask, _iou, _iou_mask, _bbox, _bbox_mask
 
 
-def compute_targets_batch(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors):
+def compute_targets_batch(h, w, box_pred, iou_pred, gt_boxes, gt_classes, anchors, im_shape):
     targets = [compute_targets(h, w, box_pred[b], iou_pred[b], gt_boxes[b],
-                               gt_classes[b], anchors) for b in range(box_pred.shape[0])]
+                               gt_classes[b], anchors, im_shape) for b in range(box_pred.shape[0])]
 
     _cls = np.stack(target[0] for target in targets)
     _cls_mask = np.stack(target[1] for target in targets)

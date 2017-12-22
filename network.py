@@ -52,8 +52,7 @@ class Network:
         self.is_training = is_training
 
         # network's placeholders
-        self.images_ph = tf.placeholder(
-            tf.float32, shape=[None, cfg.inp_size, cfg.inp_size, 3])
+        self.images_ph = tf.placeholder(tf.float32, shape=None)
 
         self.anchors_ph = tf.placeholder(
             tf.float32, shape=[cfg.num_anchors, 2])
@@ -85,11 +84,15 @@ class Network:
 
             self.classes_ph = tf.placeholder(tf.int8, shape=None)
 
+            self.im_shape_ph = tf.placeholder(tf.float32, shape=None)
+
             self.num_boxes_batch_ph = tf.placeholder(tf.float32, shape=None)
 
             _cls, _cls_mask, _iou, _iou_mask, _bbox, _bbox_mask = tf.py_func(compute_targets_batch,
-                                                                             [h, w, self.box_pred, self.iou_pred,
-                                                                              self.boxes_ph, self.classes_ph, self.anchors_ph],
+                                                                             [h, w,
+                                                                              self.box_pred, self.iou_pred,
+                                                                              self.boxes_ph, self.classes_ph,
+                                                                              self.anchors_ph, self.im_shape_ph],
                                                                              [tf.float32] * 6, name='targets')
 
             # network's losses, focal loss on cls?
@@ -163,7 +166,7 @@ class Network:
                 initialized_vars = list(set(global_vars) - set(restored_vars))
                 self.sess.run(tf.variables_initializer(initialized_vars))
 
-    def train(self, batch_images, batch_boxes, batch_classes, anchors, num_boxes_batch):
+    def train(self, batch_images, batch_boxes, batch_classes, anchors, num_boxes_batch, im_shape):
         assert self.is_training
 
         step, bbox_loss, iou_loss, cls_loss, _ = self.sess.run([self.global_step,
@@ -173,7 +176,8 @@ class Network:
                                                                           self.boxes_ph: batch_boxes,
                                                                           self.classes_ph: batch_classes,
                                                                           self.anchors_ph: anchors,
-                                                                          self.num_boxes_batch_ph: num_boxes_batch})
+                                                                          self.num_boxes_batch_ph: num_boxes_batch,
+                                                                          self.im_shape_ph: im_shape})
 
         return step, bbox_loss, iou_loss, cls_loss
 

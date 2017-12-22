@@ -18,9 +18,8 @@ ckpt_dir = os.path.join(workspace, 'ckpt')
 if not os.path.exists(ckpt_dir):
     os.makedirs(ckpt_dir)
 
-# target_size = (inp_size, inp_size)
 # todo: various shapes (inp_h != inp_w)
-inp_size = 416  # multiscale training on [416, 448, 480]
+inp_size = [384, 416, 448, 480, 512]
 num_anchors = 5
 
 # object labels and class colors
@@ -45,3 +44,7 @@ cls_scale = 1
 object_scale = 5
 noobject_scale = 1
 box_scale = 1
+
+# anchors with (height, width) order
+anchors = np.asarray([(1.19, 1.08), (4.41, 3.42), (11.38, 6.63),
+                      (5.11, 9.42), (10.52, 16.62)], dtype=np.float32) / 416

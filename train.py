@@ -8,11 +8,10 @@ import tensorflow as tf
 import config as cfg
 from network import Network
 from blob import BlobLoader
-from utils.anchors import get_anchors
 
 slim = tf.contrib.slim
 
-train_anno_dir = os.path.join(cfg.data_dir, 'annotation_val')
+train_anno_dir = os.path.join(cfg.data_dir, 'annotation')
 train_images_dir = os.path.join(cfg.data_dir, 'images')
 
 parser = argparse.ArgumentParser()
@@ -32,34 +31,32 @@ tfcfg.graph_options.optimizer_options.global_jit_level = tf.OptimizerOptions.ON_
 #               lr=args.lr, adamop=True, pretrained=True)
 
 # load anchors and data
-print('loading anchors and dataset')
-anchors = get_anchors(target_size=(cfg.inp_size, cfg.inp_size))
+print('loading dataset')
 blob = BlobLoader(anno_dir=train_anno_dir,
-                  images_dir=train_images_dir, batch_size=args.batch)
-num_iters = blob.num_anno // args.batch
-step = 0
-train_t = 0
+                  images_dir=train_images_dir,
+                  batch_size=args.batch, rescale_step=10)
 
 # losses collection contain dict of losses from network
 # {'step', 'bbox_loss', 'iou_loss', 'cls_loss', 'total_loss'}
 losses_collection = []
 
+step = 0
+train_t = 0
+
 print('start training')
 for epoch in range(1, args.epochs + 1):
-    iter = 0
     start_t = time.time()
 
-    # double images per batch with left-right flipping
     for batch_images, batch_boxes, batch_classes, num_boxes_batch in blob.next_batch():
-        iter += 1
+        im_shape = np.asarray(batch_images.shape[1:3], dtype=np.float32)
+        anchors = cfg.anchors * im_shape
 
-        step, bbox_loss, iou_loss, cls_loss = net.train(batch_images, batch_boxes,
-                                                        batch_classes, anchors, num_boxes_batch)
+        step, bbox_loss, iou_loss, cls_loss = net.train(batch_images, batch_boxes, batch_classes,
+                                                        anchors, num_boxes_batch, im_shape)
 
-        if step % 100 == 0 or iter == num_iters:
+        if step % 100 == 0:
             total_loss = bbox_loss + iou_loss + cls_loss
 
-            # add to collection
             losses_collection.append(
                 (step, bbox_loss, iou_loss, cls_loss, total_loss))
 
@@ -72,7 +69,7 @@ for epoch in range(1, args.epochs + 1):
     print('epoch: {0:03} - time: '.format(epoch) +
           str(timedelta(seconds=time_dif)))
 
-    if epoch % 3 == 0 or epoch == args.epochs:
+    if epoch % 5 == 0 or epoch == args.epochs:
         net.save_ckpt(step)
 
 print('training done - time: ' + str(timedelta(seconds=train_t)))

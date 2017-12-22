@@ -10,9 +10,9 @@ for idx, label in enumerate(cfg.label_names):
     label2cls[label] = idx
 
 
-def prep_image(anno_dir, images_dir, xml):
+def prep_image(anno_dir, images_dir, xml, target_size):
     # image in shape of [height, width, num_channels]
-    # boxes in shape of [num_gt_boxes, (xmin, ymin, xmax, ymax)], scaled in cfg.inp_size
+    # boxes in shape of [num_gt_boxes, (xmin, ymin, xmax, ymax)], scaled in target_size
     # classes in shape of [num_gt_boxes, (cls)]
     root = ctree.parse(os.path.join(anno_dir, xml)).getroot()
     image_name = root.find('filename').text
@@ -31,35 +31,37 @@ def prep_image(anno_dir, images_dir, xml):
                       float(bndbox.find('xmax').text)])
 
     # scale box coords to target size
-    boxes = np.array(boxes, dtype=np.float32) * float(cfg.inp_size)
-    boxes[:, 0::2] /= image_height
-    boxes[:, 1::2] /= image_width
+    boxes = np.array(boxes, dtype=np.float32)
+    boxes[:, 0::2] *= target_size[0] / image_height
+    boxes[:, 1::2] *= target_size[1] / image_width
 
     classes = np.array(classes, dtype=np.int8)
 
     image = cv2.imread(os.path.join(cfg.data_dir, images_dir, image_name))
     # cv2 using BGR channels for imread, convert to RGB and subtract VGG_MEAN
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) - [123.68, 116.78, 103.94]
-    image = cv2.resize(image, (cfg.inp_size, cfg.inp_size))
+    image = cv2.resize(image, (target_size[1], target_size[0]))
 
     # if np.random.randint(0, 2):  # randomly left-right flipping
     #     image = cv2.flip(image, 1)
-    #     boxes[:, 1::2] = cfg.inp_size - boxes[:, 1::2]
+    #     boxes[:, 1::2] = target_size[1] - boxes[:, 1::2]
 
     return image, boxes, classes
 
 
 class BlobLoader:
-    def __init__(self, anno_dir, images_dir, batch_size=1):
+    def __init__(self, anno_dir, images_dir, batch_size, rescale_step):
         self.anno_dir = anno_dir
         self.images_dir = images_dir
         self.anno = os.listdir(os.path.join(cfg.data_dir, anno_dir))
         self.num_anno = len(self.anno)
         self.batch_size = batch_size
+        self.rescale_step = rescale_step
         self.start_idx = 0
 
     def next_batch(self):
         np.random.shuffle(self.anno)
+        tsize = np.random.choice(cfg.inp_size, 1)
 
         while True:
             batch_images = []
@@ -69,12 +71,10 @@ class BlobLoader:
             end_idx = min(self.start_idx + self.batch_size, self.num_anno)
             for xml in self.anno[self.start_idx:end_idx]:
                 image, boxes, classes = prep_image(
-                    self.anno_dir, self.images_dir, xml)
+                    self.anno_dir, self.images_dir, xml, (tsize, tsize))
                 batch_images.append(image)
                 batch_boxes.append(boxes)
                 batch_classes.append(classes)
-
-            self.start_idx = end_idx if end_idx < self.num_anno else 0
 
             batch_images = np.asarray(batch_images, dtype=np.float32)
 
@@ -103,6 +103,11 @@ class BlobLoader:
             del batch_classes_pad
             del num_boxes_batch
 
+            self.start_idx = end_idx if end_idx < self.num_anno else 0
+
             # complete epoch
             if self.start_idx == 0:
                 break
+
+            if self.start_idx % (self.rescale_step * self.batch_size) == 0:
+                tsize = np.random.choice(cfg.inp_size, 1)

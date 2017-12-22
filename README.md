@@ -23,6 +23,8 @@ edit adamop to use AdamOptimizer instead of SGD with momentum (default) and pret
 ## demo:
 
 ## todo:
+multiscale images training
+
 fixed out of GPU's memory while training, exhausted with tf.ConfigProto GPU options
 
 evaluate model and visualization with matplotlib
