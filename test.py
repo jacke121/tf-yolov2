@@ -20,9 +20,10 @@ net = Network(session=tf.Session(config=tfcfg),
 image_name = '01.jpg'
 image = cv2.imread(os.path.join(cfg.workspace, 'test', image_name))
 
-scaled_image = cv2.cvtColor(
-    image, cv2.COLOR_BGR2RGB) - [123.68, 116.78, 103.94]
+scaled_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 scaled_image = cv2.resize(scaled_image, cfg.inp_size)
+# scaled_image -= [123.68, 116.78, 103.94]
+scaled_image = scaled_image / 128.0 - 1
 
 anchors = np.round(cfg.anchors * cfg.inp_size / 416, 2)
 

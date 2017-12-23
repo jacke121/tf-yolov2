@@ -38,9 +38,11 @@ def prep_image(anno_dir, images_dir, xml, target_size):
     classes = np.array(classes, dtype=np.int8)
 
     image = cv2.imread(os.path.join(cfg.data_dir, images_dir, image_name))
-    # cv2 using BGR channels for imread, convert to RGB and subtract VGG_MEAN
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) - [123.68, 116.78, 103.94]
+    # cv2 using BGR channels for imread, convert to RGB and normalize
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = cv2.resize(image, (target_size[1], target_size[0]))
+    # image -= [123.68, 116.78, 103.94]
+    image = image / 128.0 - 1
 
     # if np.random.randint(0, 2):  # randomly left-right flipping
     #     image = cv2.flip(image, 1)
